@@ -54,52 +54,54 @@ export default function RequirementsChecklist({
             </Box>
           }
         >
-          {requirements.map((req) => (
-            <div key={req.name}>
-              <ListItem
-                key={req.name}
-                secondaryAction={
-                  <Checkbox
-                    edge="end"
-                    onChange={handleToggle(req.name)}
-                    checked={checked.includes(req.name)}
-                  />
-                }
-              >
-                <ListItemText
-                  primary={<Typography variant="body1">{req.name}</Typography>}
-                  secondary={
-                    <>
-                      {req.note && (
-                        <Typography
-                          variant="body2"
-                          component="span"
-                          fontStyle="italic"
-                        >
-                          {req.note}
-                        </Typography>
-                      )}
-                      {req.url && (
-                        <Button
-                          variant="text"
-                          size="small"
-                          onClick={() =>
-                            showQRCode(
-                              req.url?.label || "",
-                              req.url?.link || ""
-                            )
-                          }
-                        >
-                          {req.url.label}
-                        </Button>
-                      )}
-                    </>
+          {requirements.map((req) => {
+            const { name, note, source } = req;
+
+            const label = source ? source.split(">>")[0].trim() : "";
+            const link = source ? source.split(">>")[1].trim() : "";
+
+            return (
+              <div key={name}>
+                <ListItem
+                  key={name}
+                  secondaryAction={
+                    <Checkbox
+                      edge="end"
+                      onChange={handleToggle(name)}
+                      checked={checked.includes(name)}
+                    />
                   }
-                />
-              </ListItem>
-              <Divider variant="inset" component="li" />
-            </div>
-          ))}
+                >
+                  <ListItemText
+                    primary={<Typography variant="body1" gutterBottom>{name}</Typography>}
+                    secondary={
+                      <>
+                        {note && (
+                          <Typography
+                            variant="body2"
+                            component="span"
+                            fontStyle="italic"
+                          >
+                            {req.note}
+                          </Typography>
+                        )}
+                        {source && (
+                          <Button
+                            variant="text"
+                            size="small"
+                            onClick={() => showQRCode(label, link)}
+                          >
+                            {label}
+                          </Button>
+                        )}
+                      </>
+                    }
+                  />
+                </ListItem>
+                <Divider variant="inset" component="li" />
+              </div>
+            );
+          })}
         </List>
       </CardContent>
       <Divider />

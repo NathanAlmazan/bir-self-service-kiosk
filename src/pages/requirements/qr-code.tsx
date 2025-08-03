@@ -22,7 +22,7 @@ export default function RequirementsQRCode({
   handleClose,
 }: QRCodeProps) {
   return (
-    <Dialog open={open} onClose={handleClose}>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm">
       <DialogTitle>{label}</DialogTitle>
       <DialogContent
         sx={{
@@ -37,7 +37,7 @@ export default function RequirementsQRCode({
           textAlign="center"
           sx={{ paddingBottom: 3 }}
         >
-          Scan the QR Code below to access the link:
+          Please scan the QR Code below to access the link:
         </Typography>
         <QRCode size={256} value={link} />
       </DialogContent>

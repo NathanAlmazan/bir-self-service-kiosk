@@ -27,7 +27,7 @@ export default function RequirementsHeader(props: HeaderProps) {
         <Stack spacing={1} direction="row">
           <TimerOutlinedIcon />
           <Typography variant="body1" sx={{ color: "text.secondary" }}>
-            {props.duration}
+            {`${props.duration} Total Processing Time`}
           </Typography>
         </Stack>
         <Stack spacing={1} direction="row">

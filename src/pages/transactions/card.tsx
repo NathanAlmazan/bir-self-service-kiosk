@@ -15,7 +15,7 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import PaymentOutlinedIcon from "@mui/icons-material/PaymentOutlined";
 
 type TransactionProps = {
-  id: number;
+  id: string;
   title: string;
   duration: string;
   fee: string;
@@ -81,7 +81,7 @@ export default function TransactionCard({
       >
         <Button
           variant="contained"
-          onClick={(event) => handleClick(event, (id + 1).toString())}
+          onClick={(event) => handleClick(event, id)}
           endIcon={<ArrowForwardIosIcon />}
         >
           Start Transaction

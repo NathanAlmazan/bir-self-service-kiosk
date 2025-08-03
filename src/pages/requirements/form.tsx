@@ -20,6 +20,7 @@ import type { Taxpayer } from ".";
 
 type FormProps = {
   taxpayerData: Taxpayer;
+  isSubmitting: boolean;
   handleInputChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => void;
@@ -29,6 +30,7 @@ type FormProps = {
 
 export default function TaxpayerForm({
   taxpayerData,
+  isSubmitting,
   handleInputChange,
   handleSubmit,
   handlePreviousStep,
@@ -170,6 +172,7 @@ export default function TaxpayerForm({
           type="submit"
           variant="contained"
           endIcon={<ArrowForwardIosOutlinedIcon />}
+          loading={isSubmitting}
         >
           Proceed
         </Button>

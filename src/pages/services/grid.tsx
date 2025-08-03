@@ -1,8 +1,9 @@
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
 
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
+
+import { useRouter } from "src/routes/hooks";
 
 import { motion, AnimatePresence } from "motion/react";
 
@@ -44,13 +45,13 @@ const services: Services[] = [
 ];
 
 export default function ServiceGrid() {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleSelectService = (
     _: React.MouseEvent<HTMLDivElement>,
     service: string
   ) => {
-    navigate(`/transactions/${service.toLowerCase().replace(/ & /g, "-")}`);
+    router.push(`/transactions/${service.toLowerCase().replace(/ & /g, "-")}`);
   };
 
   return (

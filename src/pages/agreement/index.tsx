@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
 
 import Container from "@mui/material/Container";
 import Tabs from "@mui/material/Tabs";
@@ -8,6 +7,8 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
+
+import { useRouter } from "src/routes/hooks";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -39,10 +40,10 @@ function a11yProps(index: number) {
 }
 
 export default function UserAgreementPage() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [value, setValue] = React.useState(0);
 
-  const handleNavigateBack = () => navigate(-1);
+  const handleNavigateBack = () => router.back();
 
   const handleChange = (_: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);

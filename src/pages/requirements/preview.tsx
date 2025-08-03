@@ -1,14 +1,53 @@
 import Box from "@mui/material/Box";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
+import ListItemIcon from "@mui/material/ListItemIcon";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import QRCode from "react-qr-code";
+
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 
 import { useTheme } from "@mui/material/styles";
 
-export default function ReceiptPreview() {
-  const theme = useTheme();
+import type { Transaction, Taxpayer } from ".";
 
+type PreviewProps = {
+  transaction: Transaction;
+  taxpayer: Taxpayer;
+  complete: boolean;
+  requirements: string[];
+};
+
+const formatDate = (isoString: string) => {
+  const date = new Date(isoString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
+const formatTime = (isoString: string) => {
+  const date = new Date(isoString);
+  return date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+export default function ReceiptPreview({
+  transaction,
+  taxpayer,
+  complete,
+  requirements,
+}: PreviewProps) {
+  const theme = useTheme();
   return (
     <Box
+      id="receipt-preview"
       sx={{
         width: 300,
         padding: 3,
@@ -40,16 +79,16 @@ export default function ReceiptPreview() {
           {"YOUR TRANSACTION NUMBER:"}
         </Typography>
         <Typography fontWeight="bold" fontSize={28} textAlign="center">
-          A-0005
+          {taxpayer.uuid.split("-").slice(1).join("-")}
         </Typography>
         <Typography fontWeight="bold" fontSize={12} textAlign="center">
           <b>{"STATUS :"}</b>
           <Typography
             component="span"
             fontSize={12}
-            color={theme.palette.success.main}
+            color={complete ? theme.palette.success.main : theme.palette.error.main}
           >
-            {" COMPLETE REQUIREMENTS"}
+            {" " + (complete ? "COMPLETE REQUIREMENTS" : "LACK OF DOCUMENTS")}
           </Typography>
         </Typography>
       </Box>
@@ -62,43 +101,103 @@ export default function ReceiptPreview() {
       >
         <Typography fontSize={12}>
           <b>{"RDO :"}</b>
-          {" 029"}
+          {" " + taxpayer.rdo}
         </Typography>
         <Typography fontSize={12}>
           <b>{"SERVICE TYPE :"}</b>
-          {" REGISTRATION - TIN APPLICATION"}
+          {" " +
+            transaction.service.toUpperCase() +
+            (transaction.category
+              ? " - " + transaction.category.toUpperCase()
+              : "")}
         </Typography>
       </Box>
       <Box sx={{ py: 2 }}>
         <Typography fontSize={12} textAlign="center">
           <b>{"DATE :"}</b>
-          {" July 16, 2025"}
+          {" " + formatDate(new Date().toISOString())}
         </Typography>
         <Typography fontSize={12} textAlign="center">
           <b>{"TIME :"}</b>
-          {" 08:10 AM"}
+          {" " + formatTime(new Date().toISOString())}
         </Typography>
       </Box>
-      <Stack spacing={2}>
-        <Typography fontSize={10} textAlign="center">
-          {
-            "PLEASE PROCEED TO THE RDO'S CONCERNED SECTION, WHICH WILL PROCESS THE SERVICE IMMEDIATELY."
-          }
-        </Typography>
-        <Typography fontSize={10} textAlign="center" fontStyle="italic">
-          {
-            "For assistance, approach the Public Assistance Compliance Desk (PACD)"
-          }
-        </Typography>
-        <Typography
-          fontSize={10}
-          textAlign="center"
-          fontStyle="italic"
-          color={theme.palette.primary.main}
+      {!complete && (
+        <Box
+          sx={{
+            py: 2,
+            borderTop: "1px solid black",
+            borderBottom: "1px solid black",
+          }}
         >
-          {'"Streamlining Tax Services with Comfort and Care"'}
-        </Typography>
-      </Stack>
+          <Typography fontSize={10} textAlign="left" fontWeight="bold">
+            {"Please complete the following requirements:"}
+          </Typography>
+          <List dense>
+            {requirements.map((requirement, index) => (
+              <ListItem key={index} disablePadding>
+                <ListItemIcon sx={{ minWidth: 24 }}>
+                  <CheckBoxOutlineBlankIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary={<Typography fontSize={10}>{requirement}</Typography>} />
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+      )}
+      {complete ? (
+        <Stack spacing={2}>
+          <Typography fontSize={10} textAlign="center">
+            Please proceed to the <b>RDO'S CONCERNED SECTION</b>, which will process the service immediately.
+          </Typography>
+          <Typography fontSize={10} textAlign="center" fontStyle="italic">
+            For assistance, approach the Public Assistance Compliance Desk (PACD)
+          </Typography>
+          <Typography
+            fontSize={10}
+            textAlign="center"
+            fontStyle="italic"
+            color={theme.palette.primary.main}
+          >
+            {'"Streamlining Tax Services with Comfort and Care"'}
+          </Typography>
+        </Stack>
+      ) : (
+        <Stack spacing={2}>
+          <Typography fontSize={10} textAlign="center" sx={{ pt: 2 }}>
+            Please proceed to the <b>TAXPAYER SERVICE OFFICER (TSO) / PUBLIC ASSISTANCE COMPLIANCE DESK (PACD)</b>, which will assist and guide you on the requirements that you need to comply with.
+          </Typography>
+          <Typography fontSize={10} textAlign="center">
+            Once the requirements are <b>Complete</b>, please return to the <b>Taxpayer Lounge</b> as per the type of service being availed.
+          </Typography>
+          <Typography
+            fontSize={10}
+            textAlign="center"
+            fontStyle="italic"
+            color={theme.palette.primary.main}
+          >
+            {'"Streamlining Tax Services with Comfort and Care"'}
+          </Typography>
+        </Stack>
+      )}
+
+      {complete && (
+        <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", pt: 3 }}>
+          <QRCode
+            value={`https://www.bir.gov.ph/home`}
+            size={128}
+            style={{ margin: "auto" }}
+          />
+          <Typography
+            fontSize={9}
+            textAlign="center"
+            fontStyle="italic"
+            sx={{ pt: 1 }}
+          >
+            Thank you for using Taxpayer Lounge! Taxpayer Service Officer will scan the QR Code to mark the start of your transaction.
+          </Typography>
+        </Box>
+      )}
     </Box>
   );
 }
