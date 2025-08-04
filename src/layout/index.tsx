@@ -38,7 +38,7 @@ export default function Layout({
   layoutQuery = "md",
 }: LayoutProps) {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const renderHeader = () => {
     const headerSlotProps: HeaderSectionProps["slotProps"] = {

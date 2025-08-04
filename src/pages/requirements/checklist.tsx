@@ -54,21 +54,21 @@ export default function RequirementsChecklist({
             </Box>
           }
         >
-          {requirements.map((req, index) => {
-            const { name, note, source } = req;
+          {requirements.map(req => {
+            const { id, name, note, source } = req;
 
             const label = source ? source.split(">>")[0].trim() : "";
             const link = source ? source.split(">>")[1].trim() : "";
 
             return (
-              <div key={index}>
+              <div key={id}>
                 <ListItem
                   key={name}
                   secondaryAction={
                     <Checkbox
                       edge="end"
-                      onChange={handleToggle(name)}
-                      checked={checked.includes(name)}
+                      onChange={handleToggle(id)}
+                      checked={checked.includes(id)}
                     />
                   }
                 >

@@ -38,10 +38,12 @@ const RequirementsQRCode = React.lazy(() => import("./qr-code"));
 const UserAgreement = React.lazy(() => import("./agreement"));
 
 export type Requirements = {
+  id: string;
   name: string;
   note?: string;
   tags: string[];
   source?: string;
+  alternatives?: string[];
 };
 
 export type Transaction = {
@@ -82,7 +84,7 @@ const filterRequirementsByTags = (
   selectedTags: string[]
 ): Requirements[] => {
   if (selectedTags.length === 0) {
-    return requirements; // return all requirements if no tags are selected
+    return []; // return empty list if no tags are selected
   }
 
   return requirements.filter(
@@ -93,10 +95,14 @@ const filterRequirementsByTags = (
 // utility function to compare requirements and find missing ones
 const getMissingRequirements = (
   allRequirements: Requirements[],
-  checkedRequirementNames: string[]
+  checkedRequirementIds: string[]
 ): Requirements[] => {
+  const selected = new Set(checkedRequirementIds);
+
   return allRequirements.filter(
-    (req) => !checkedRequirementNames.includes(req.name)
+    (req) =>
+      !selected.has(req.id) &&
+      !req.alternatives?.some((alt) => selected.has(alt))
   );
 };
 
@@ -113,7 +119,7 @@ const getNextDocumentId = async (
   submittedAt: string
 ): Promise<string> => {
   const serviceCode: Record<ServiceType, string> = {
-    "REGISTRATION": "A",
+    REGISTRATION: "A",
     "FILING & PAYMENT": "B",
     "CERTIFICATE & CLEARANCE": "C",
     "AUDIT & INVESTIGATION": "D",
@@ -186,7 +192,7 @@ export default function RequirementsPage() {
           const data = {
             id: transactionSnap.id,
             requirements: requirementsSnap.docs.map(
-              (doc) => doc.data() as Requirements
+              (doc) => ({ id: doc.id, ...doc.data() } as Requirements)
             ),
             ...transactionSnap.data(),
           } as Transaction;
@@ -352,12 +358,11 @@ export default function RequirementsPage() {
       setIsSubmittingForm(true);
 
       // calculate completion status
-      const complete = Boolean(
-        filteredRequirements.length === checkedRequirements.length
+      const missing = getMissingRequirements(
+        filteredRequirements,
+        checkedRequirements
       );
-      const missing = complete
-        ? []
-        : getMissingRequirements(filteredRequirements, checkedRequirements);
+      const complete = missing.length === 0;
 
       setMissingRequirements(missing);
       setCompleteRequirements(complete);
@@ -376,8 +381,9 @@ export default function RequirementsPage() {
         complete,
         submittedAt,
         transaction: doc(db, "transactions", transaction.id),
-        checked: checkedRequirements,
-        categories: selectedCategories,
+        checked: checkedRequirements.map((id) =>
+          doc(db, "transactions", transaction.id, "requirements", id)
+        ),
         // only include missing requirements if not complete
         ...(complete ? {} : { missing: missing.map((req) => req.name) }),
       };
