@@ -7,7 +7,8 @@ import Button from "@mui/material/Button";
 import LinearProgress from "@mui/material/LinearProgress";
 
 import html2canvas from "html2canvas";
-import { storage } from "src/firebase";
+import { db, storage } from "src/firebase";
+import { doc, updateDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 import type { Requirements, Transaction, Taxpayer } from ".";
@@ -28,13 +29,13 @@ const captureReceiptAsImage = async (
   fileName: string
 ): Promise<string> => {
   try {
-    // Get the element to capture
+    // get the element to capture
     const element = document.getElementById(elementId);
     if (!element) {
       throw new Error(`Element with id "${elementId}" not found`);
     }
 
-    // Capture the element as canvas
+    // capture the element as canvas
     const canvas = await html2canvas(element, {
       backgroundColor: "#ffffff",
       scale: 2,
@@ -45,7 +46,7 @@ const captureReceiptAsImage = async (
       width: element.offsetWidth,
     });
 
-    // Convert canvas to blob
+    // convert canvas to blob
     const blob = await new Promise<Blob>((resolve) => {
       canvas.toBlob(
         (blob) => {
@@ -58,17 +59,23 @@ const captureReceiptAsImage = async (
       );
     });
 
-    // Upload to Firebase Storage
+    // upload to Firebase Storage
     const storageRef = ref(storage, `receipts/${fileName}.png`);
     const snapshot = await uploadBytes(storageRef, blob);
 
-    // Get download URL
+    // get download URL
     const downloadURL = await getDownloadURL(snapshot.ref);
+
+    // update the taxpayer document with the receipt URL
+    const taxpayerDocRef = doc(db, "taxpayers", fileName);
+    await updateDoc(taxpayerDocRef, {
+      receiptUrl: downloadURL,
+    });
 
     return downloadURL;
   } catch (error) {
     console.error("Error capturing receipt:", error);
-    throw error;
+    throw new Error("Failed to capture receipt: " + error);
   }
 };
 
@@ -127,6 +134,7 @@ export default function PrintReceiptForm({
               onClick={() =>
                 showQRCode("Download Your Receipt", receiptImageUrl || "")
               }
+              sx={{ typography: "body2" }}
             >
               download
             </Button>
@@ -148,6 +156,7 @@ export default function PrintReceiptForm({
               onClick={() =>
                 showQRCode("Download Your Receipt", receiptImageUrl || "")
               }
+              sx={{ typography: "body2" }}
             >
               download
             </Button>

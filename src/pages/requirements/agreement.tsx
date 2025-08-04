@@ -1,14 +1,12 @@
 import * as React from "react";
 
-import Container from "@mui/material/Container";
+import Dialog from "@mui/material/Dialog";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
-
-import { useRouter } from "src/routes/hooks";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -39,18 +37,20 @@ function a11yProps(index: number) {
   };
 }
 
-export default function UserAgreementPage() {
-  const router = useRouter();
-  const [value, setValue] = React.useState(0);
+type UserAgreementProps = {
+  open: boolean;
+  handleClose: (agree: boolean) => void;
+}
 
-  const handleNavigateBack = () => router.back();
+export default function UserAgreementPage({  open, handleClose }: UserAgreementProps) {
+  const [value, setValue] = React.useState(0);
 
   const handleChange = (_: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
   return (
-    <Container maxWidth="md" sx={{ zIndex: 2 }}>
+    <Dialog fullScreen open={open} onClose={() => handleClose(false)}>
       <Box sx={{ width: "100%" }}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs
@@ -121,14 +121,14 @@ export default function UserAgreementPage() {
               <Button
                 variant="contained"
                 color="primary"
-                onClick={handleNavigateBack}
+                onClick={() => handleClose(true)}
               >
                 Agree
               </Button>
               <Button
                 variant="outlined"
                 color="error"
-                onClick={handleNavigateBack}
+                onClick={() => handleClose(false)}
               >
                 Disagree
               </Button>
@@ -194,14 +194,14 @@ export default function UserAgreementPage() {
               <Button
                 variant="contained"
                 color="primary"
-                onClick={handleNavigateBack}
+                onClick={() => handleClose(true)}
               >
                 Agree
               </Button>
               <Button
                 variant="outlined"
                 color="error"
-                onClick={handleNavigateBack}
+                onClick={() => handleClose(false)}
               >
                 Disagree
               </Button>
@@ -209,6 +209,6 @@ export default function UserAgreementPage() {
           </Stack>
         </CustomTabPanel>
       </Box>
-    </Container>
+    </Dialog>
   );
 }

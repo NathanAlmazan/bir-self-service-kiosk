@@ -35,6 +35,7 @@ import KioskReviewForm from "./review";
 
 const ErrorSnackbar = React.lazy(() => import("./error"));
 const RequirementsQRCode = React.lazy(() => import("./qr-code"));
+const UserAgreement = React.lazy(() => import("./agreement"));
 
 export type Requirements = {
   name: string;
@@ -62,6 +63,9 @@ export type Taxpayer = {
   taxpayerName: string;
   tin: string;
   submittedAt: string;
+  privacyPolicyA: boolean;
+  privacyPolicyB: boolean;
+  privacyPolicyC: boolean;
 };
 
 // utility function to extract unique tags from requirements
@@ -299,7 +303,10 @@ export default function RequirementsPage() {
     contact: "",
     taxpayerName: "",
     tin: "",
-    submittedAt: ""
+    submittedAt: "",
+    privacyPolicyA: false,
+    privacyPolicyB: false,
+    privacyPolicyC: false,
   });
   const [isSubmittingForm, setIsSubmittingForm] =
     React.useState<boolean>(false);
@@ -313,6 +320,14 @@ export default function RequirementsPage() {
     setTaxpayerData((prevData) => ({
       ...prevData,
       [name]: value,
+    }));
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setTaxpayerData((prevData) => ({
+      ...prevData,
+      [name]: checked,
     }));
   };
 
@@ -432,6 +447,22 @@ export default function RequirementsPage() {
     setErrorSnackbarOpen(false);
   };
 
+  // ========================= User Aggreeement State =========================
+  const [agreementOpen, setAgreementOpen] = React.useState<boolean>(false);
+
+  const handleAgreementOpen = () => {
+    setAgreementOpen(true);
+  };
+
+  const handleAgreementClose = (agreed: boolean) => {
+    setAgreementOpen(false);
+    // update local state with privacy policy agreement status
+    setTaxpayerData((prev) => ({
+      ...prev,
+      privacyPolicyA: agreed,
+    }));
+  };
+
   return (
     <>
       {isLoading || !transaction || steps.length === 0 ? (
@@ -513,6 +544,8 @@ export default function RequirementsPage() {
                         taxpayerData={taxpayerData}
                         isSubmitting={isSubmittingForm}
                         handleInputChange={handleInputChange}
+                        handleCheckboxChange={handleCheckboxChange}
+                        handleAgreementOpen={handleAgreementOpen}
                         handleSubmit={handleSubmitTaxpayerForm}
                         handlePreviousStep={handlePreviousStep}
                       />
@@ -575,6 +608,15 @@ export default function RequirementsPage() {
                 open={errorSnackbarOpen}
                 message={errorMessage}
                 handleClose={handleErrorClose}
+              />
+            </React.Suspense>
+          )}
+
+          {agreementOpen && (
+            <React.Suspense>
+              <UserAgreement
+                open={agreementOpen}
+                handleClose={handleAgreementClose}
               />
             </React.Suspense>
           )}

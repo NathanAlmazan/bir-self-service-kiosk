@@ -101,7 +101,7 @@ export default function ReceiptPreview({
       >
         <Typography fontSize={12}>
           <b>{"RDO :"}</b>
-          {" " + taxpayer.rdo}
+          {" " + taxpayer.rdo.split("No.")[1].trim().padStart(3, "0")}
         </Typography>
         <Typography fontSize={12}>
           <b>{"SERVICE TYPE :"}</b>
@@ -181,12 +181,12 @@ export default function ReceiptPreview({
         </Stack>
       )}
 
-      {complete && (
-        <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", pt: 3 }}>
+      {complete && taxpayer.uuid && (
+        <Box sx={{ width: "100%", display: "flex", flexDirection: "column", justifyContent: "center", pt: 3 }}>
           <QRCode
-            value={`https://www.bir.gov.ph/home`}
+            value={`${import.meta.env.VITE_BASE_URL}/verify/${btoa(taxpayer.uuid)}`}
             size={128}
-            style={{ margin: "auto" }}
+            style={{ width: "100%", display: "flex", flexDirection: "column", justifyContent: "center" }}
           />
           <Typography
             fontSize={9}
@@ -194,7 +194,7 @@ export default function ReceiptPreview({
             fontStyle="italic"
             sx={{ pt: 1 }}
           >
-            Thank you for using Taxpayer Lounge! Taxpayer Service Officer will scan the QR Code to mark the start of your transaction.
+            Thank you for using One-Stop Taxpayer Lounge! Taxpayer Service Officer will scan the QR Code to mark the start of your transaction.
           </Typography>
         </Box>
       )}

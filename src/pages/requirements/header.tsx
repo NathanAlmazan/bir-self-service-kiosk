@@ -11,11 +11,11 @@ type HeaderProps = {
   fee: string;
 };
 
-export default function RequirementsHeader(props: HeaderProps) {
+export default function RequirementsHeader({ title, duration, fee }: HeaderProps) {
   return (
     <Stack spacing={2} direction="column">
       <Typography component="div" variant="h3">
-        {props.title}
+        {title}
       </Typography>
       <Box
         sx={{
@@ -27,13 +27,13 @@ export default function RequirementsHeader(props: HeaderProps) {
         <Stack spacing={1} direction="row">
           <TimerOutlinedIcon />
           <Typography variant="body1" sx={{ color: "text.secondary" }}>
-            {`${props.duration} Total Processing Time`}
+            {`${duration} Total Processing Time`}
           </Typography>
         </Stack>
         <Stack spacing={1} direction="row">
           <PaymentOutlinedIcon />
           <Typography variant="body1" sx={{ color: "text.secondary" }}>
-            {props.fee}
+            {fee}
           </Typography>
         </Stack>
       </Box>

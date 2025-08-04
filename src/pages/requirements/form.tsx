@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardActions from "@mui/material/CardActions";
@@ -6,7 +7,6 @@ import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
-import Link from "@mui/material/Link";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
@@ -15,7 +15,6 @@ import Divider from "@mui/material/Divider";
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
 
-import { RouterLink } from "../../routes/components";
 import type { Taxpayer } from ".";
 
 type FormProps = {
@@ -24,6 +23,10 @@ type FormProps = {
   handleInputChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => void;
+  handleCheckboxChange: (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => void;
+  handleAgreementOpen: () => void;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   handlePreviousStep: () => void;
 };
@@ -32,10 +35,12 @@ export default function TaxpayerForm({
   taxpayerData,
   isSubmitting,
   handleInputChange,
+  handleCheckboxChange,
+  handleAgreementOpen,
   handleSubmit,
   handlePreviousStep,
 }: FormProps) {
-  const { firstName, lastName, rdo, contact, taxpayerName, tin } = taxpayerData;
+  const { firstName, lastName, rdo, contact, taxpayerName, tin, privacyPolicyA, privacyPolicyB, privacyPolicyC } = taxpayerData;
   return (
     <Card component="form" onSubmit={handleSubmit}>
       <CardContent>
@@ -121,32 +126,54 @@ export default function TaxpayerForm({
             <FormGroup>
               <FormControlLabel
                 required
-                control={<Checkbox />}
+                control={<Checkbox name="privacyPolicyA" checked={privacyPolicyA} onChange={handleCheckboxChange} />}
                 label={
                   <Typography variant="body2" component="span">
                     {
-                      "I hereby authorize to collect and process the data indicated herein. "
+                      "I hereby authorize to collect and process the data indicated herein."
                     }
-                    <Link
-                      href="/agreement"
-                      component={RouterLink}
+                    <Button
+                      onClick={handleAgreementOpen}
                       color="primary"
-                      sx={{ typography: "subtitle2" }}
+                      variant="text"
+                      sx={{ typography: "body2" }}
                     >
                       Please see User Agreement.
-                    </Link>
+                    </Button>
                   </Typography>
                 }
               />
               <FormControlLabel
                 required
-                control={<Checkbox />}
-                label="I have understood the BIR Privacy at https://www.bir.gov.ph/index.php/privacy-notice.html."
+                control={<Checkbox name="privacyPolicyB" checked={privacyPolicyB} onChange={handleCheckboxChange} />}
+                label={
+                  <>
+                    I have understood the BIR Privacy at{" "}
+                    <Box
+                      component="span"
+                      sx={{ color: "primary.main", fontStyle: "italic" }}
+                    >
+                      https://www.bir.gov.ph/index.php/privacy-notice.html
+                    </Box>
+                    .
+                  </>
+                }
               />
               <FormControlLabel
                 required
-                control={<Checkbox />}
-                label="I understand that any personal information is protected by RA 10173, Data Privacy Act of 2012."
+                control={<Checkbox name="privacyPolicyC" checked={privacyPolicyC} onChange={handleCheckboxChange} />}
+                label={
+                  <>
+                    I understand that any personal information is protected by{" "}
+                    <Box
+                      component="span"
+                      sx={{ fontWeight: "bold", fontStyle: "italic" }}
+                    >
+                      RA 10173, Data Privacy Act of 2012
+                    </Box>
+                    .
+                  </>
+                }
               />
             </FormGroup>
           </Grid>

@@ -73,7 +73,11 @@ export default function RequirementsChecklist({
                   }
                 >
                   <ListItemText
-                    primary={<Typography variant="body1" gutterBottom>{name}</Typography>}
+                    primary={
+                      <Typography variant="body1" gutterBottom>
+                        {name}
+                      </Typography>
+                    }
                     secondary={
                       <>
                         {note && (

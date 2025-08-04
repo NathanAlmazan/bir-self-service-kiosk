@@ -9,7 +9,7 @@ import Fallback from "src/components/fallback";
 const ServicesPage = lazy(() => import("src/pages/services"));
 const TransactionsPage = lazy(() => import("src/pages/transactions"));
 const RequirementsPage = lazy(() => import("src/pages/requirements"));
-const UserAgreementPage = lazy(() => import("src/pages/agreement"));
+const VerificationPage = lazy(() => import("src/pages/verify"));
 const NotFoundPage = lazy(() => import("src/pages/not-found"));
 
 const routes: RouteObject[] = [
@@ -24,13 +24,16 @@ const routes: RouteObject[] = [
     children: [
       { index: true, element: <ServicesPage /> },
       { path: "transactions/:service", element: <TransactionsPage /> },
-      { path: "requirements/:uuid", element: <RequirementsPage /> },
-      { path: "agreement", element: <UserAgreementPage /> },
+      { path: "requirements/:uuid", element: <RequirementsPage /> }
     ],
   },
   {
     path: "404",
     element: <NotFoundPage />,
+  },
+  {
+    path: "verify/:uuid",
+    element: <VerificationPage />,
   },
   { path: "*", element: <NotFoundPage /> },
 ];

@@ -37,7 +37,7 @@ export default function RequirementsQRCode({
           textAlign="center"
           sx={{ paddingBottom: 3 }}
         >
-          Please scan the QR Code below to access the link:
+          Please scan the QR Code below to access resource.
         </Typography>
         <QRCode size={256} value={link} />
       </DialogContent>
