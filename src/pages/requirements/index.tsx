@@ -217,6 +217,11 @@ export default function RequirementsPage() {
         transaction.requirements
       );
       setCategories(uniqueTags);
+
+      if (uniqueTags.includes("All")) {
+        // if "All" is present, add it by default
+        setSelectedCategories(["All"]);
+      }
     }
   }, [transaction]);
 
@@ -236,7 +241,7 @@ export default function RequirementsPage() {
   React.useEffect(() => {
     const baseSteps = ["Verify Requirements", "Provide Details", "Get Receipt"];
 
-    if (categories.length > 0) {
+    if (categories.length > 1) {
       // include "Select Category" step if there are categories to choose from
       setSteps(["Select Category", ...baseSteps]);
     } else {

@@ -86,6 +86,7 @@ export default function TransactionsPage() {
               "==",
               service?.split("-").join(" & ").toUpperCase() || ""
             ),
+            where("published", "==", true),
             orderBy("order", "asc")
           )
         );

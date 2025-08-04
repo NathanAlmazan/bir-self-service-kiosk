@@ -44,15 +44,17 @@ export default function RequirementsCategories({
             mt: 3,
           }}
         >
-          {categories.map((category) => (
-            <Chip
-              key={category}
-              label={category}
-              clickable
-              color={selected.includes(category) ? "primary" : "default"}
-              onClick={() => toggleCategory(category)}
-            />
-          ))}
+          {categories
+            .filter((category) => category !== "All")
+            .map((category) => (
+              <Chip
+                key={category}
+                label={category}
+                clickable
+                color={selected.includes(category) ? "primary" : "default"}
+                onClick={() => toggleCategory(category)}
+              />
+            ))}
         </Box>
       </CardContent>
       <Divider />
@@ -74,6 +76,7 @@ export default function RequirementsCategories({
         <Button
           variant="contained"
           onClick={handleNextStep}
+          disabled={selected.length === 0}
           endIcon={<ArrowForwardIosOutlinedIcon />}
         >
           Proceed
