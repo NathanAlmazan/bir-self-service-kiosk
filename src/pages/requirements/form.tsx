@@ -42,7 +42,7 @@ export default function TaxpayerForm({
 }: FormProps) {
   const { firstName, lastName, rdo, contact, taxpayerName, tin, privacyPolicyA, privacyPolicyB, privacyPolicyC } = taxpayerData;
   return (
-    <Card component="form" onSubmit={handleSubmit}>
+    <Card component="form" autoComplete="off" onSubmit={handleSubmit}>
       <CardContent>
         <Grid container spacing={3}>
           <Grid size={12}>

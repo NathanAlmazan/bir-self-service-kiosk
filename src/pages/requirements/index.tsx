@@ -113,7 +113,7 @@ const getNextDocumentId = async (
   submittedAt: string
 ): Promise<string> => {
   const serviceCode: Record<ServiceType, string> = {
-    REGISTRATION: "A",
+    "REGISTRATION": "A",
     "FILING & PAYMENT": "B",
     "CERTIFICATE & CLEARANCE": "C",
     "AUDIT & INVESTIGATION": "D",
@@ -139,6 +139,7 @@ const getNextDocumentId = async (
 
     const countQuery = query(
       collection(db, "taxpayers"),
+      where("service", "==", service),
       where("submittedAt", ">=", startOfDayISO),
       where("submittedAt", "<", endOfDayISO)
     );
@@ -371,6 +372,7 @@ export default function RequirementsPage() {
         contact: taxpayerData.contact,
         taxpayerName: taxpayerData.taxpayerName,
         tin: taxpayerData.tin,
+        service: transaction.service.toUpperCase(),
         complete,
         submittedAt,
         transaction: doc(db, "transactions", transaction.id),
@@ -382,7 +384,7 @@ export default function RequirementsPage() {
 
       // use setDoc with the auto-incremented ID instead of addDoc
       const autoIncrementedId = await getNextDocumentId(
-        transaction.service as ServiceType,
+        transaction.service.toUpperCase() as ServiceType,
         submittedAt
       );
       const docRef = doc(db, "taxpayers", autoIncrementedId);

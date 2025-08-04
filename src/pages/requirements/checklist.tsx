@@ -54,14 +54,14 @@ export default function RequirementsChecklist({
             </Box>
           }
         >
-          {requirements.map((req) => {
+          {requirements.map((req, index) => {
             const { name, note, source } = req;
 
             const label = source ? source.split(">>")[0].trim() : "";
             const link = source ? source.split(">>")[1].trim() : "";
 
             return (
-              <div key={name}>
+              <div key={index}>
                 <ListItem
                   key={name}
                   secondaryAction={
