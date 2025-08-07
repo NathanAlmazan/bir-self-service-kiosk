@@ -12,7 +12,6 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import Divider from "@mui/material/Divider";
 
-import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
 
 import type { Taxpayer } from ".";
@@ -28,7 +27,6 @@ type FormProps = {
   ) => void;
   handleAgreementOpen: () => void;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-  handlePreviousStep: () => void;
 };
 
 export default function TaxpayerForm({
@@ -37,8 +35,7 @@ export default function TaxpayerForm({
   handleInputChange,
   handleCheckboxChange,
   handleAgreementOpen,
-  handleSubmit,
-  handlePreviousStep,
+  handleSubmit
 }: FormProps) {
   const { firstName, lastName, rdo, contact, taxpayerName, tin, privacyPolicyA, privacyPolicyB, privacyPolicyC } = taxpayerData;
   return (
@@ -189,19 +186,13 @@ export default function TaxpayerForm({
         }}
       >
         <Button
-          variant="outlined"
-          onClick={handlePreviousStep}
-          startIcon={<ArrowBackIosNewOutlinedIcon />}
-        >
-          Go Back
-        </Button>
-        <Button
+          size="large"
           type="submit"
           variant="contained"
           endIcon={<ArrowForwardIosOutlinedIcon />}
           loading={isSubmitting}
         >
-          Proceed
+          Continue
         </Button>
       </CardActions>
     </Card>

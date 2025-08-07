@@ -67,6 +67,7 @@ export default function RequirementsCategories({
         }}
       >
         <Button
+          size="large"
           variant="outlined"
           onClick={handlePreviousStep}
           startIcon={<ArrowBackIosNewOutlinedIcon />}
@@ -74,12 +75,13 @@ export default function RequirementsCategories({
           Go Back
         </Button>
         <Button
+          size="large"
           variant="contained"
           onClick={handleNextStep}
           disabled={selected.length === 0}
           endIcon={<ArrowForwardIosOutlinedIcon />}
         >
-          Proceed
+          Continue
         </Button>
       </CardActions>
     </Card>

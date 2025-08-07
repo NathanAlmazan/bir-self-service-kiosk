@@ -32,16 +32,16 @@ const services: Services[] = [
     image: "/icons/clearance.png",
     color: "warning",
   },
-  {
-    title: "Audit & Investigation",
-    image: "/icons/investigation.png",
-    color: "error",
-  },
-  {
-    title: "Compliance & Enforcement",
-    image: "/icons/compliance.png",
-    color: "info",
-  },
+  // {
+  //   title: "Audit & Investigation",
+  //   image: "/icons/investigation.png",
+  //   color: "error",
+  // },
+  // {
+  //   title: "Compliance & Enforcement",
+  //   image: "/icons/compliance.png",
+  //   color: "info",
+  // },
 ];
 
 export default function ServiceGrid() {
@@ -63,7 +63,7 @@ export default function ServiceGrid() {
           </Typography>
         </Grid>
         {services.map((service, index) => (
-          <Grid key={service.title} size={{ xs: 12, sm: 6 }}>
+          <Grid key={service.title} size={12}>
             <motion.div
               key={service.title}
               initial={{ opacity: 0, x: -10 }}

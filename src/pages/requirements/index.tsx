@@ -42,6 +42,7 @@ export type Requirements = {
   name: string;
   note?: string;
   tags: string[];
+  optional?: boolean;
   source?: string;
   alternatives?: string[];
 };
@@ -75,7 +76,7 @@ const getUniqueTagsFromRequirements = (
   requirements: Requirements[]
 ): string[] => {
   const allTags = requirements.flatMap((req) => req.tags || []);
-  return Array.from(new Set(allTags)).sort(); // sort alphabetically for consistency
+  return Array.from(new Set(allTags)).sort((a, b) => a.length - b.length); // sort alphabetically for consistency
 };
 
 // utility function to filter requirements by selected categories/tags
@@ -102,7 +103,7 @@ const getMissingRequirements = (
   return allRequirements.filter(
     (req) =>
       !selected.has(req.id) &&
-      !req.alternatives?.some((alt) => selected.has(alt))
+      !req.alternatives?.some((alt) => selected.has(alt) && !req.optional)
   );
 };
 
@@ -281,6 +282,8 @@ export default function RequirementsPage() {
   const [missingRequirements, setMissingRequirements] = React.useState<
     Requirements[]
   >([]);
+  const [completeRequirements, setCompleteRequirements] =
+    React.useState<boolean>(false);
 
   // filtered requirements based on selected categories
   React.useEffect(() => {
@@ -292,6 +295,21 @@ export default function RequirementsPage() {
       setFilteredRequirements(filtered);
     }
   }, [transaction, selectedCategories]);
+
+  // handle missing requirements
+  React.useEffect(() => {
+    if (filteredRequirements.length > 0) {
+      const missing = getMissingRequirements(
+        filteredRequirements,
+        checkedRequirements
+      );
+      setMissingRequirements(missing);
+
+      if (missing.length === 0) {
+        setCompleteRequirements(true);
+      }
+    }
+  }, [filteredRequirements, checkedRequirements]);
 
   const handleToggleRequirements = (value: string) => () => {
     const currentIndex = checkedRequirements.indexOf(value);
@@ -321,8 +339,6 @@ export default function RequirementsPage() {
     privacyPolicyC: false,
   });
   const [isSubmittingForm, setIsSubmittingForm] =
-    React.useState<boolean>(false);
-  const [completeRequirements, setCompleteRequirements] =
     React.useState<boolean>(false);
 
   const handleInputChange = (
@@ -357,16 +373,6 @@ export default function RequirementsPage() {
     try {
       setIsSubmittingForm(true);
 
-      // calculate completion status
-      const missing = getMissingRequirements(
-        filteredRequirements,
-        checkedRequirements
-      );
-      const complete = missing.length === 0;
-
-      setMissingRequirements(missing);
-      setCompleteRequirements(complete);
-
       const submittedAt = new Date().toISOString();
 
       // prepare taxpayer data for submission
@@ -378,14 +384,20 @@ export default function RequirementsPage() {
         taxpayerName: taxpayerData.taxpayerName,
         tin: taxpayerData.tin,
         service: transaction.service.toUpperCase(),
-        complete,
+        complete: completeRequirements,
         submittedAt,
         transaction: doc(db, "transactions", transaction.id),
         checked: checkedRequirements.map((id) =>
           doc(db, "transactions", transaction.id, "requirements", id)
         ),
         // only include missing requirements if not complete
-        ...(complete ? {} : { missing: missing.map((req) => req.name) }),
+        ...(completeRequirements
+          ? {}
+          : {
+              missing: missingRequirements.map((req) =>
+                doc(db, "transactions", transaction.id, "requirements", req.id)
+              ),
+            }),
       };
 
       // use setDoc with the auto-incremented ID instead of addDoc
@@ -536,10 +548,11 @@ export default function RequirementsPage() {
                       <RequirementsChecklist
                         checked={checkedRequirements}
                         requirements={filteredRequirements}
+                        missingRequirements={missingRequirements}
                         handleToggle={handleToggleRequirements}
                         handleNextStep={handleNextStep}
-                        handlePreviousStep={handlePreviousStep}
                         showQRCode={showQRCode}
+                        handlePreviousStep={handlePreviousStep}
                       />
                     </motion.div>
                   )}
@@ -560,7 +573,6 @@ export default function RequirementsPage() {
                         handleCheckboxChange={handleCheckboxChange}
                         handleAgreementOpen={handleAgreementOpen}
                         handleSubmit={handleSubmitTaxpayerForm}
-                        handlePreviousStep={handlePreviousStep}
                       />
                     </motion.div>
                   )}

@@ -37,24 +37,24 @@ export default function ServiceCard({
         backgroundImage: `linear-gradient(135deg, ${varAlpha(
           theme.vars.palette[color].lighterChannel,
           0.48
-        )}, ${varAlpha(theme.vars.palette[color].lightChannel, 0.48)})`,
+        )}, ${varAlpha(theme.vars.palette[color].lightChannel, 0.52)})`,
       }}
       onClick={(event) => handleClick(event, title)}
     >
-      <Box sx={{ width: 54, height: 54, mb: 3 }}>
-        <img alt={title} src={image} />
-      </Box>
-
       <Box
+        component="div"
         sx={{
+          width: "100%",
           display: "flex",
-          flexWrap: "wrap",
-          alignItems: "flex-end",
-          justifyContent: "flex-end",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
         }}
       >
-        <Box sx={{ flexGrow: 1, minWidth: 112 }}>
-          <Typography variant="h5">{title}</Typography>
+        <Typography variant="h4">{title}</Typography>
+
+        <Box sx={{ width: 84, height: 84 }}>
+          <img alt={title} src={image} />
         </Box>
       </Box>
 
@@ -62,13 +62,14 @@ export default function ServiceCard({
         src="/bg/shape-square.svg"
         sx={{
           top: 0,
-          left: -20,
-          width: 240,
+          right: -36,
+          width: 512,
           zIndex: -1,
-          height: 240,
-          opacity: 0.24,
+          height: 512,
+          opacity: 0.5,
           position: "absolute",
           color: `${color}.main`,
+          transform: "scaleX(-1)",
         }}
       />
     </Card>

@@ -1,3 +1,5 @@
+import * as React from "react";
+// MUI
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardActions from "@mui/material/CardActions";
@@ -6,10 +8,15 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
+import ListItemAvatar from "@mui/material/ListItemAvatar";
+import Avatar from "@mui/material/Avatar";
 import ListItemText from "@mui/material/ListItemText";
 import Checkbox from "@mui/material/Checkbox";
 import Divider from "@mui/material/Divider";
-
+// Animation
+import { AnimatePresence, motion } from "framer-motion";
+import * as party from "party-js";
+// Icons
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
 
@@ -18,95 +25,209 @@ import type { Requirements } from ".";
 type ChecklistProps = {
   checked: string[];
   requirements: Requirements[];
+  missingRequirements: Requirements[];
   handleToggle: (name: string) => () => void;
   handleNextStep: () => void;
-  handlePreviousStep: () => void;
   showQRCode: (label: string, link: string) => void;
+  handlePreviousStep: () => void;
 };
 
 export default function RequirementsChecklist({
   checked,
   requirements,
+  missingRequirements,
   handleToggle,
   handleNextStep,
-  handlePreviousStep,
   showQRCode,
+  handlePreviousStep,
 }: ChecklistProps) {
+  const [submitted, setSubmitted] = React.useState(false);
+  const successHeadingRef = React.useRef<HTMLHeadingElement>(null);
+
+  const handleSubmit = () => {
+    setSubmitted(true);
+  };
+
+  React.useEffect(() => {
+    if (submitted && missingRequirements.length === 0) {
+      const timeout = setTimeout(() => {
+        if (successHeadingRef.current) {
+          party.confetti(successHeadingRef.current, {
+            count: party.variation.range(60, 100),
+            spread: party.variation.range(80, 100),
+            size: party.variation.range(1.5, 2.0),
+          });
+        }
+      }, 500);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [submitted, missingRequirements]);
+
   return (
     <Card>
       <CardContent>
-        <List
-          subheader={
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                justifyConten: "center",
-                alignItems: "center",
-              }}
+        <AnimatePresence mode="wait">
+          {submitted ? (
+            <motion.div
+              key="submitted"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
             >
-              <Typography variant="h6" align="center">
-                Checklist of Requirements
-              </Typography>
-              <Typography variant="body2" align="center">
-                Kindly tick the box if you have the following.
-              </Typography>
-            </Box>
-          }
-        >
-          {requirements.map(req => {
-            const { id, name, note, source } = req;
-
-            const label = source ? source.split(">>")[0].trim() : "";
-            const link = source ? source.split(">>")[1].trim() : "";
-
-            return (
-              <div key={id}>
-                <ListItem
-                  key={name}
-                  secondaryAction={
-                    <Checkbox
-                      edge="end"
-                      onChange={handleToggle(id)}
-                      checked={checked.includes(id)}
-                    />
+              {missingRequirements.length > 0 ? (
+                <List
+                  subheader={
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyConten: "center",
+                        alignItems: "center",
+                        marginBottom: 3,
+                      }}
+                    >
+                      <Typography variant="h6" align="center">
+                        {`Almost done! ${
+                          missingRequirements.length > 1
+                            ? "Just a few more requirements to complete."
+                            : "Just one more requirement to complete."
+                        }`}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        align="center"
+                        fontStyle="italic"
+                      >
+                        {`We'll prepare a summary of your remaining ${
+                          missingRequirements.length > 1
+                            ? "requirements"
+                            : "requirement"
+                        } shortly.`}
+                      </Typography>
+                    </Box>
                   }
                 >
-                  <ListItemText
-                    primary={
-                      <Typography variant="body1" gutterBottom>
-                        {name}
-                      </Typography>
-                    }
-                    secondary={
-                      <>
-                        {note && (
-                          <Typography
-                            variant="body2"
-                            component="span"
-                            fontStyle="italic"
-                          >
-                            {req.note}
-                          </Typography>
-                        )}
-                        {source && (
-                          <Button
-                            variant="text"
-                            size="small"
-                            onClick={() => showQRCode(label, link)}
-                          >
-                            {label}
-                          </Button>
-                        )}
-                      </>
-                    }
-                  />
-                </ListItem>
-                <Divider variant="inset" component="li" />
-              </div>
-            );
-          })}
-        </List>
+                  {missingRequirements.map((req, index) => (
+                    <ListItem key={req.id}>
+                      <ListItemAvatar>
+                        <Avatar>{index + 1}</Avatar>
+                      </ListItemAvatar>
+                      <ListItemText primary={req.name} />
+                    </ListItem>
+                  ))}
+                </List>
+              ) : (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyConten: "center",
+                    alignItems: "center",
+                    marginBottom: 3,
+                    py: 5,
+                  }}
+                >
+                  {" "}
+                  <Typography
+                    ref={successHeadingRef}
+                    variant="h4"
+                    component="h1"
+                    align="center"
+                  >
+                    All requirements are complete — you're good to go! 🎉
+                  </Typography>
+                  <Typography variant="body1" align="center" fontStyle="italic">
+                    Your queue number will be generated shortly.
+                  </Typography>
+                </Box>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="unsubmitted"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <List
+                subheader={
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyConten: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Typography variant="h6" align="center">
+                      Checklist of Requirements
+                    </Typography>
+                    <Typography variant="body2" align="center">
+                      Kindly tick the box if you have the following.
+                    </Typography>
+                  </Box>
+                }
+              >
+                {requirements.map((req) => {
+                  const { id, name, note, source } = req;
+
+                  const label = source ? source.split(">>")[0].trim() : "";
+                  const link = source ? source.split(">>")[1].trim() : "";
+
+                  return (
+                    <div key={id}>
+                      <ListItem
+                        key={name}
+                        secondaryAction={
+                          <Checkbox
+                            edge="end"
+                            onChange={handleToggle(id)}
+                            checked={checked.includes(id)}
+                            size="large"
+                          />
+                        }
+                      >
+                        <ListItemText
+                          primary={
+                            <Typography variant="body1" gutterBottom>
+                              {name}
+                            </Typography>
+                          }
+                          secondary={
+                            <>
+                              {note && (
+                                <Typography
+                                  variant="body2"
+                                  component="span"
+                                  fontStyle="italic"
+                                >
+                                  {req.note}
+                                </Typography>
+                              )}
+                              {source && (
+                                <Button
+                                  variant="text"
+                                  size="small"
+                                  onClick={() => showQRCode(label, link)}
+                                >
+                                  {label}
+                                </Button>
+                              )}
+                            </>
+                          }
+                        />
+                      </ListItem>
+                      <Divider variant="inset" component="li" />
+                    </div>
+                  );
+                })}
+              </List>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </CardContent>
       <Divider />
       <CardActions
@@ -117,20 +238,35 @@ export default function RequirementsChecklist({
           backgroundColor: "#E6F3FF",
         }}
       >
-        <Button
-          variant="outlined"
-          onClick={handlePreviousStep}
-          startIcon={<ArrowBackIosNewOutlinedIcon />}
-        >
-          Go Back
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleNextStep}
-          endIcon={<ArrowForwardIosOutlinedIcon />}
-        >
-          Proceed
-        </Button>
+        {submitted ? (
+          <Button
+            size="large"
+            variant="contained"
+            onClick={handleNextStep}
+            endIcon={<ArrowForwardIosOutlinedIcon />}
+          >
+            Continue
+          </Button>
+        ) : (
+          <>
+            <Button
+              size="large"
+              variant="outlined"
+              onClick={handlePreviousStep}
+              startIcon={<ArrowBackIosNewOutlinedIcon />}
+            >
+              Go Back
+            </Button>
+            <Button
+              size="large"
+              variant="contained"
+              onClick={handleSubmit}
+              endIcon={<ArrowForwardIosOutlinedIcon />}
+            >
+              Verify
+            </Button>
+          </>
+        )}
       </CardActions>
     </Card>
   );

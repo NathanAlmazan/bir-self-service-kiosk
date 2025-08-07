@@ -2,12 +2,9 @@ import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
-import ListItemIcon from "@mui/material/ListItemIcon";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import QRCode from "react-qr-code";
-
-import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 
 import { useTheme } from "@mui/material/styles";
 
@@ -86,9 +83,12 @@ export default function ReceiptPreview({
           <Typography
             component="span"
             fontSize={12}
-            color={complete ? theme.palette.success.main : theme.palette.error.main}
+            color={
+              complete ? theme.palette.success.main : theme.palette.error.main
+            }
           >
-            {" " + (complete ? "COMPLETE REQUIREMENTS" : "LACK OF DOCUMENTS")}
+            {" " +
+              (complete ? "COMPLETE REQUIREMENTS" : "INCOMPLETE REQUIREMENTS")}
           </Typography>
         </Typography>
       </Box>
@@ -122,36 +122,15 @@ export default function ReceiptPreview({
           {" " + formatTime(new Date().toISOString())}
         </Typography>
       </Box>
-      {!complete && (
-        <Box
-          sx={{
-            py: 2,
-            borderTop: "1px solid black",
-            borderBottom: "1px solid black",
-          }}
-        >
-          <Typography fontSize={10} textAlign="left" fontWeight="bold">
-            {"Please complete the following requirements:"}
-          </Typography>
-          <List dense>
-            {requirements.map((requirement, index) => (
-              <ListItem key={index} disablePadding>
-                <ListItemIcon sx={{ minWidth: 24 }}>
-                  <CheckBoxOutlineBlankIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText primary={<Typography fontSize={10}>{requirement}</Typography>} />
-              </ListItem>
-            ))}
-          </List>
-        </Box>
-      )}
       {complete ? (
         <Stack spacing={2}>
           <Typography fontSize={10} textAlign="center">
-            Please proceed to the <b>RDO'S CONCERNED SECTION</b>, which will process the service immediately.
+            Please proceed to the <b>RDO'S CONCERNED SECTION</b>, which will
+            process the service immediately.
           </Typography>
           <Typography fontSize={10} textAlign="center" fontStyle="italic">
-            For assistance, approach the Public Assistance Compliance Desk (PACD)
+            For assistance, approach the Public Assistance Compliance Desk
+            (PACD)
           </Typography>
           <Typography
             fontSize={10}
@@ -164,12 +143,45 @@ export default function ReceiptPreview({
         </Stack>
       ) : (
         <Stack spacing={2}>
-          <Typography fontSize={10} textAlign="center" sx={{ pt: 2 }}>
-            Please proceed to the <b>TAXPAYER SERVICE OFFICER (TSO) / PUBLIC ASSISTANCE COMPLIANCE DESK (PACD)</b>, which will assist and guide you on the requirements that you need to comply with.
+          <Typography fontSize={10} textAlign="center">
+            Please proceed to the{" "}
+            <b>
+              TAXPAYER SERVICE OFFICER (TSO) / PUBLIC ASSISTANCE COMPLIANCE DESK
+              (PACD)
+            </b>
+            , which will assist and guide you on the requirements that you need
+            to comply with.
           </Typography>
           <Typography fontSize={10} textAlign="center">
-            Once the requirements are <b>Complete</b>, please return to the <b>Taxpayer Lounge</b> as per the type of service being availed.
+            Once the requirements are <b>Complete</b>, please return to the{" "}
+            <b>Taxpayer Lounge</b> as per the type of service being availed.
           </Typography>
+          <Box
+            sx={{
+              py: 2,
+              borderTop: "1px solid black",
+              borderBottom: "1px solid black",
+            }}
+          >
+            <Typography fontSize={10} textAlign="left" fontWeight="bold">
+              {`Checklist of Incomplete ${
+                requirements.length > 1 ? "Requirements" : "Requirement"
+              }:`}
+            </Typography>
+            <List dense>
+              {requirements.map((requirement, index) => (
+                <ListItem key={index} disablePadding>
+                  <ListItemText
+                    primary={
+                      <Typography fontSize={10}>{`${
+                        index + 1
+                      }. ${requirement}`}</Typography>
+                    }
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Box>
           <Typography
             fontSize={10}
             textAlign="center"
@@ -180,13 +192,27 @@ export default function ReceiptPreview({
           </Typography>
         </Stack>
       )}
-
       {complete && taxpayer.uuid && (
-        <Box sx={{ width: "100%", display: "flex", flexDirection: "column", justifyContent: "center", pt: 3 }}>
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            pt: 3,
+          }}
+        >
           <QRCode
-            value={`${import.meta.env.VITE_BASE_URL}/verify/${btoa(taxpayer.uuid)}`}
+            value={`${import.meta.env.VITE_BASE_URL}/verify/${btoa(
+              taxpayer.uuid
+            )}`}
             size={128}
-            style={{ width: "100%", display: "flex", flexDirection: "column", justifyContent: "center" }}
+            style={{
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
           />
           <Typography
             fontSize={9}
@@ -194,7 +220,8 @@ export default function ReceiptPreview({
             fontStyle="italic"
             sx={{ pt: 1 }}
           >
-            Thank you for using One-Stop Taxpayer Lounge! Taxpayer Service Officer will scan the QR Code to mark the start of your transaction.
+            Thank you for using One-Stop Taxpayer Lounge! Taxpayer Service
+            Officer will scan the QR Code to mark the start of your transaction.
           </Typography>
         </Box>
       )}

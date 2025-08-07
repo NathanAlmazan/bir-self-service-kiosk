@@ -121,7 +121,7 @@ export default function PrintReceiptForm({
       {complete ? (
         <Box sx={{ pt: 2 }}>
           <Typography variant="h6" align="center">
-            {"All set! You've completed the requirements."}
+            {"All set! You've successfully completed everything."}
           </Typography>
           <Typography variant="body2" align="center">
             You may now proceed with your transaction. Don't forget to take a

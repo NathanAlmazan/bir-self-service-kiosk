@@ -21,6 +21,7 @@
     "html2canvas": "^1.4.1",
     "minimal-shared": "^1.0.15",
     "motion": "^12.23.12",
+    "party-js": "^2.2.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-qr-code": "^2.0.18",

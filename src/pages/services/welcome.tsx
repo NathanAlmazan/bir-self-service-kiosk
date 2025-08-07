@@ -12,6 +12,7 @@ export default function WelcomeCard() {
         backgroundImage: 'url("/bg/kiosk.jpg")',
         backgroundSize: "cover",
         backgroundPosition: "center",
+        minHeight: 360
       }}
     >
       <CardContent
