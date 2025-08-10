@@ -34,12 +34,12 @@ export type Service =
 
 export type Transaction = {
   id: string;
-  order: number;
   name: string;
-  duration: string;
-  service: Service;
-  category: string;
   fee: string;
+  duration: string;
+  service: string;
+  category?: string;
+  checklist?: string;
 };
 
 const formatServiceName = (service: string | undefined) => {
@@ -95,7 +95,11 @@ export default function TransactionsPage() {
           (doc) => ({ id: doc.id, ...doc.data() } as Transaction)
         );
         const uniqueCategories = Array.from(
-          new Set(serviceTransactions.map((t) => t.category))
+          new Set(
+            serviceTransactions
+              .filter((t) => t.category)
+              .map((t) => t.category || "")
+          )
         ).reverse();
 
         setCategories(uniqueCategories);

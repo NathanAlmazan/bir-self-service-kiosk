@@ -40,9 +40,12 @@ function a11yProps(index: number) {
 type UserAgreementProps = {
   open: boolean;
   handleClose: (agree: boolean) => void;
-}
+};
 
-export default function UserAgreementPage({  open, handleClose }: UserAgreementProps) {
+export default function UserAgreementPage({
+  open,
+  handleClose,
+}: UserAgreementProps) {
   const [value, setValue] = React.useState(0);
 
   const handleChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -53,11 +56,7 @@ export default function UserAgreementPage({  open, handleClose }: UserAgreementP
     <Dialog fullScreen open={open} onClose={() => handleClose(false)}>
       <Box sx={{ width: "100%" }}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Tabs
-            value={value}
-            onChange={handleChange}
-            aria-label="basic tabs example"
-          >
+          <Tabs value={value} onChange={handleChange}>
             <Tab label="English" {...a11yProps(0)} />
             <Tab label="Tagalog" {...a11yProps(1)} />
           </Tabs>

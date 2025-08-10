@@ -37,7 +37,7 @@ export default function TaxpayerForm({
   handleAgreementOpen,
   handleSubmit
 }: FormProps) {
-  const { firstName, lastName, rdo, contact, taxpayerName, tin, privacyPolicyA, privacyPolicyB, privacyPolicyC } = taxpayerData;
+  const { firstName, lastName, rdo, contact, taxpayerName, taxpayerTIN, privacyPolicyA, privacyPolicyB, privacyPolicyC } = taxpayerData;
   return (
     <Card component="form" autoComplete="off" onSubmit={handleSubmit}>
       <CardContent>
@@ -112,8 +112,8 @@ export default function TaxpayerForm({
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
-              name="tin"
-              value={tin}
+              name="taxpayerTIN"
+              value={taxpayerTIN}
               onChange={handleInputChange}
               variant="outlined"
               label="TIN (Optional)"

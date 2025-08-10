@@ -6,7 +6,9 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
-
+// Animation
+import { AnimatePresence, motion } from "motion/react";
+// Icons
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
 
@@ -44,17 +46,27 @@ export default function RequirementsCategories({
             mt: 3,
           }}
         >
-          {categories
-            .filter((category) => category !== "All")
-            .map((category) => (
-              <Chip
-                key={category}
-                label={category}
-                clickable
-                color={selected.includes(category) ? "primary" : "default"}
-                onClick={() => toggleCategory(category)}
-              />
-            ))}
+          <AnimatePresence mode="wait">
+            {categories
+              .filter((category) => category !== "All")
+              .map((category) => (
+                <motion.div
+                  key={category}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Chip
+                    key={category}
+                    label={category}
+                    clickable
+                    color={selected.includes(category) ? "primary" : "default"}
+                    onClick={() => toggleCategory(category)}
+                  />
+                </motion.div>
+              ))}
+          </AnimatePresence>
         </Box>
       </CardContent>
       <Divider />

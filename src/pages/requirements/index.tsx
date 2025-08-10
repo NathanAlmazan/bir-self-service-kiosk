@@ -27,7 +27,7 @@ import {
 // Components
 import Fallback from "src/components/fallback";
 import RequirementsHeader from "./header";
-import RequirementsCategories from "./categories";
+import RequirementsCategories from "./conditions";
 import RequirementsChecklist from "./checklist";
 import TaxpayerForm from "./form";
 import PrintReceiptForm from "./print";
@@ -42,7 +42,12 @@ export type Requirements = {
   name: string;
   note?: string;
   group?: string;
-  categories: string[];
+  optional?: boolean;
+  conditions: string[];
+  source: {
+    label: string;
+    link: string;
+  };
 };
 
 export type Transaction = {
@@ -51,8 +56,8 @@ export type Transaction = {
   fee: string;
   duration: string;
   service: string;
-  category: string;
-  checklist: string;
+  category?: string;
+  checklist?: string;
   requirements?: Requirements[];
 };
 
@@ -72,45 +77,55 @@ export type Taxpayer = {
 
 // utility function to extract unique tags from requirements
 type CategoryNode = Record<string, { __children: CategoryNode }>;
+
 function buildCategoryTree(requirements: Requirements[]) {
   const root: CategoryNode = {};
-  requirements.forEach(req => {
+  requirements.forEach((req) => {
     let current: CategoryNode = root;
-    req.categories.forEach(cat => {
-      if (!current[cat]) {
-        current[cat] = { __children: {} };
+    req.conditions.forEach((cond) => {
+      if (!current[cond]) {
+        current[cond] = { __children: {} };
       }
-      current = current[cat].__children;
+      current = current[cond].__children;
     });
   });
   return root;
 }
 
-// utility function to filter requirements by selected categories/tags
-const filterRequirementsByTags = (
+// utility function to filter requirements by selected conditions
+const filterRequirementsByConditions = (
   requirements: Requirements[],
-  selectedTags: string[]
+  conditionsMet: string[]
 ): Requirements[] => {
-  if (selectedTags.length === 0) {
-    return []; // return empty list if no tags are selected
+  if (conditionsMet.length === 0) {
+    return requirements; // return all requirements if no conditions are met
   }
 
   return requirements.filter(
-    (req) => req.tags && req.tags.every((tag) => selectedTags.includes(tag))
+    (req) =>
+      req.conditions &&
+      req.conditions.every((cond) => conditionsMet.includes(cond))
   );
 };
 
 // utility function to compare requirements and find missing ones
 const getMissingRequirements = (
   allRequirements: Requirements[],
-  checkedRequirementIds: string[]
+  checkedRequirementsIds: string[]
 ): Requirements[] => {
-  const selected = new Set(checkedRequirementIds);
+  const checkedRequirements = allRequirements.filter((req) =>
+    checkedRequirementsIds.includes(req.id)
+  );
+  const selectedReq = new Set(checkedRequirements.map((req) => req.id));
+  const selectedGrp = new Set(
+    checkedRequirements.filter((req) => req.group).map((req) => req.group)
+  );
 
   return allRequirements.filter(
     (req) =>
-      !selected.has(req.id) &&
-      !req.alternatives?.some((alt) => selected.has(alt) && !req.optional)
+      !selectedReq.has(req.id) &&
+      !req.optional &&
+      !(req.group && selectedGrp.has(req.group))
   );
 };
 
@@ -220,22 +235,23 @@ export default function RequirementsPage() {
   }, [uuid, router]);
 
   // ====================== Requirements Categories State ======================
-  const categoryTree = React.useMemo(() => buildCategoryTree(transaction?.requirements || []), [transaction]);
-  const [selectedCategories, setSelectedCategories] = React.useState<string[]>(
-    []
+  const conditionTree = React.useMemo(
+    () => buildCategoryTree(transaction?.requirements || []),
+    [transaction]
   );
+  const [conditionsMet, setConditionsMet] = React.useState<string[]>([]);
 
   // current node from tree based on path
   const currentNode = React.useMemo(() => {
-    let node = categoryTree;
-    for (const p of selectedCategories) {
+    let node = conditionTree;
+    for (const p of conditionsMet) {
       node = node[p]?.__children || {};
     }
     return node;
-  }, [selectedCategories, categoryTree]);
+  }, [conditionsMet, conditionTree]);
 
   const toggleCategory = (category: string) => {
-    setSelectedCategories((prev) =>
+    setConditionsMet((prev) =>
       prev.includes(category)
         ? prev.filter((c) => c !== category)
         : [...prev, category]
@@ -250,14 +266,14 @@ export default function RequirementsPage() {
   React.useEffect(() => {
     const baseSteps = ["Verify Requirements", "Provide Details", "Get Receipt"];
 
-    if (categories.length > 1) {
+    if (transaction?.requirements && transaction.requirements.length > 0) {
       // include "Select Category" step if there are categories to choose from
       setSteps(["Select Category", ...baseSteps]);
     } else {
       // skip "Select Category" step if no categories available
       setSteps(baseSteps);
     }
-  }, [categories, transaction]);
+  }, [transaction]);
 
   const handleNextStep = () => {
     if (activeStep <= steps.length) {
@@ -289,13 +305,13 @@ export default function RequirementsPage() {
   // filtered requirements based on selected categories
   React.useEffect(() => {
     if (transaction?.requirements) {
-      const filtered = filterRequirementsByTags(
+      const filtered = filterRequirementsByConditions(
         transaction.requirements,
-        selectedCategories
+        conditionsMet
       );
       setFilteredRequirements(filtered);
     }
-  }, [transaction, selectedCategories]);
+  }, [transaction, conditionsMet]);
 
   // handle missing requirements
   React.useEffect(() => {
@@ -333,7 +349,7 @@ export default function RequirementsPage() {
     rdo: "",
     contact: "",
     taxpayerName: "",
-    tin: "",
+    taxpayerTIN: "",
     submittedAt: "",
     privacyPolicyA: false,
     privacyPolicyB: false,
@@ -383,7 +399,7 @@ export default function RequirementsPage() {
         rdo: taxpayerData.rdo,
         contact: taxpayerData.contact,
         taxpayerName: taxpayerData.taxpayerName,
-        tin: taxpayerData.tin,
+        taxpayerTIN: taxpayerData.taxpayerTIN,
         service: transaction.service.toUpperCase(),
         complete: completeRequirements,
         submittedAt,
@@ -502,6 +518,7 @@ export default function RequirementsPage() {
                 title={transaction.name}
                 duration={transaction.duration}
                 fee={transaction.fee}
+                checklist={transaction.checklist}
               />
             </Grid>
             {/* Transaction Steps */}
@@ -528,7 +545,7 @@ export default function RequirementsPage() {
                       transition={{ duration: 0.3 }}
                     >
                       <RequirementsCategories
-                        selected={selectedCategories}
+                        selected={conditionsMet}
                         categories={Object.keys(currentNode)}
                         toggleCategory={toggleCategory}
                         handlePreviousStep={handlePreviousStep}

@@ -182,7 +182,7 @@ export default function PrintReceiptForm({
         taxpayer={taxpayer}
         requirements={missingRequirements.map((req) => req.name)}
       />
-      <Button variant="outlined" onClick={handleNextStep}>
+      <Button size="large" variant="outlined" onClick={handleNextStep}>
         Review Self-Service Kiosk
       </Button>
     </Stack>

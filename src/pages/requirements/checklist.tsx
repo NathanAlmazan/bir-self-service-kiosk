@@ -174,9 +174,6 @@ export default function RequirementsChecklist({
                 {requirements.map((req) => {
                   const { id, name, note, source } = req;
 
-                  const label = source ? source.split(">>")[0].trim() : "";
-                  const link = source ? source.split(">>")[1].trim() : "";
-
                   return (
                     <div key={id}>
                       <ListItem
@@ -211,9 +208,11 @@ export default function RequirementsChecklist({
                                 <Button
                                   variant="text"
                                   size="small"
-                                  onClick={() => showQRCode(label, link)}
+                                  onClick={() =>
+                                    showQRCode(source.label, source.link)
+                                  }
                                 >
-                                  {label}
+                                  {source.label}
                                 </Button>
                               )}
                             </>
