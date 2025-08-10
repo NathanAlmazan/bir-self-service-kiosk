@@ -41,19 +41,18 @@ export type Requirements = {
   id: string;
   name: string;
   note?: string;
-  tags: string[];
-  optional?: boolean;
-  source?: string;
-  alternatives?: string[];
+  group?: string;
+  categories: string[];
 };
 
 export type Transaction = {
   id: string;
   name: string;
-  duration: string;
   fee: string;
+  duration: string;
   service: string;
   category: string;
+  checklist: string;
   requirements?: Requirements[];
 };
 
@@ -64,7 +63,7 @@ export type Taxpayer = {
   rdo: string;
   contact: string;
   taxpayerName: string;
-  tin: string;
+  taxpayerTIN: string;
   submittedAt: string;
   privacyPolicyA: boolean;
   privacyPolicyB: boolean;
@@ -72,12 +71,20 @@ export type Taxpayer = {
 };
 
 // utility function to extract unique tags from requirements
-const getUniqueTagsFromRequirements = (
-  requirements: Requirements[]
-): string[] => {
-  const allTags = requirements.flatMap((req) => req.tags || []);
-  return Array.from(new Set(allTags)).sort((a, b) => a.length - b.length); // sort alphabetically for consistency
-};
+type CategoryNode = Record<string, { __children: CategoryNode }>;
+function buildCategoryTree(requirements: Requirements[]) {
+  const root: CategoryNode = {};
+  requirements.forEach(req => {
+    let current: CategoryNode = root;
+    req.categories.forEach(cat => {
+      if (!current[cat]) {
+        current[cat] = { __children: {} };
+      }
+      current = current[cat].__children;
+    });
+  });
+  return root;
+}
 
 // utility function to filter requirements by selected categories/tags
 const filterRequirementsByTags = (
@@ -120,7 +127,7 @@ const getNextDocumentId = async (
   submittedAt: string
 ): Promise<string> => {
   const serviceCode: Record<ServiceType, string> = {
-    REGISTRATION: "A",
+    "REGISTRATION": "A",
     "FILING & PAYMENT": "B",
     "CERTIFICATE & CLEARANCE": "C",
     "AUDIT & INVESTIGATION": "D",
@@ -213,25 +220,19 @@ export default function RequirementsPage() {
   }, [uuid, router]);
 
   // ====================== Requirements Categories State ======================
-  const [categories, setCategories] = React.useState<string[]>([]);
+  const categoryTree = React.useMemo(() => buildCategoryTree(transaction?.requirements || []), [transaction]);
   const [selectedCategories, setSelectedCategories] = React.useState<string[]>(
     []
   );
 
-  React.useEffect(() => {
-    if (transaction?.requirements) {
-      // extract unique tags from all requirements
-      const uniqueTags = getUniqueTagsFromRequirements(
-        transaction.requirements
-      );
-      setCategories(uniqueTags);
-
-      if (uniqueTags.includes("All")) {
-        // if "All" is present, add it by default
-        setSelectedCategories(["All"]);
-      }
+  // current node from tree based on path
+  const currentNode = React.useMemo(() => {
+    let node = categoryTree;
+    for (const p of selectedCategories) {
+      node = node[p]?.__children || {};
     }
-  }, [transaction]);
+    return node;
+  }, [selectedCategories, categoryTree]);
 
   const toggleCategory = (category: string) => {
     setSelectedCategories((prev) =>
@@ -528,7 +529,7 @@ export default function RequirementsPage() {
                     >
                       <RequirementsCategories
                         selected={selectedCategories}
-                        categories={categories}
+                        categories={Object.keys(currentNode)}
                         toggleCategory={toggleCategory}
                         handlePreviousStep={handlePreviousStep}
                         handleNextStep={handleNextStep}
