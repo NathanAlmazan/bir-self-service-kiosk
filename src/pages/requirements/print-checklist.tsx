@@ -9,6 +9,7 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import QRCode from "react-qr-code";
+import { SxProps, Theme } from "@mui/material/styles";
 
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -16,21 +17,23 @@ interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
+  sx?: SxProps<Theme>;
 }
 
 function CustomTabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
+  const { children, value, index, sx, ...other } = props;
 
   return (
-    <div
+    <Box
+      component="div"
       role="tabpanel"
       hidden={value !== index}
       id={`simple-tabpanel-${index}`}
       aria-labelledby={`simple-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-    </div>
+      {value === index && <Box sx={{ p: 3, ...sx }}>{children}</Box>}
+    </Box>
   );
 }
 
@@ -71,7 +74,7 @@ export default function PrintChecklistDialog({
             >
               <CloseIcon />
             </IconButton>
-            <Typography sx={{ ml: 2, flex: 1 }} variant="h4" component="div">
+            <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
               Checklist of Requirements
             </Typography>
           </Toolbar>
@@ -82,13 +85,12 @@ export default function PrintChecklistDialog({
             <Tab label="Download" {...a11yProps(1)} />
           </Tabs>
         </Box>
-        <CustomTabPanel value={value} index={0}>
+        <CustomTabPanel value={value} index={0} sx={{ height: "calc(100vh - 120px)", padding: 0 }}>
           <iframe
             src={checklistUrl}
             title="PDF Preview"
             width="100%"
             height="100%"
-            style={{ border: "none" }}
           />
         </CustomTabPanel>
         <CustomTabPanel value={value} index={1}>
@@ -97,9 +99,13 @@ export default function PrintChecklistDialog({
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              height: "100%",
+              flexDirection: "column",
+              my: 3
             }}
           >
+            <Typography variant="h6" component="div" align="center" sx={{ mb: 3 }}>
+              Please scan the QR code to download the checklist.
+            </Typography>
             <QRCode size={256} value={checklistUrl} />
           </Box>
         </CustomTabPanel>

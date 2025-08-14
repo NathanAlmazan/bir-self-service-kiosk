@@ -44,7 +44,7 @@ export type Requirements = {
   group?: string;
   optional?: boolean;
   conditions: string[];
-  source: {
+  source?: {
     label: string;
     link: string;
   };
@@ -250,6 +250,13 @@ export default function RequirementsPage() {
     return node;
   }, [conditionsMet, conditionTree]);
 
+  // automatically add 'DEFAULT' category if available
+  React.useEffect(() => {
+    if (currentNode["DEFAULT"]) {
+      setConditionsMet((prev) => [...prev, "DEFAULT"]);
+    }
+  }, [currentNode]);
+
   const toggleCategory = (category: string) => {
     setConditionsMet((prev) =>
       prev.includes(category)
@@ -267,13 +274,34 @@ export default function RequirementsPage() {
     const baseSteps = ["Verify Requirements", "Provide Details", "Get Receipt"];
 
     if (transaction?.requirements && transaction.requirements.length > 0) {
-      // include "Select Category" step if there are categories to choose from
-      setSteps(["Select Category", ...baseSteps]);
-    } else {
-      // skip "Select Category" step if no categories available
-      setSteps(baseSteps);
+      // collect all unique conditions from requirements
+      const conditions = new Set<string>();
+      transaction.requirements.forEach((req) => {
+        req.conditions.forEach((condition) => {
+          conditions.add(condition);
+        });
+      });
+
+      // include "Select Category" step if there are multiple unique conditions
+      if (conditions.size > 1) {
+        setSteps(["Select Category", ...baseSteps]);
+      } else {
+        // skip "Select Category" step if only one or no conditions
+        setSteps(baseSteps);
+      }
     }
   }, [transaction]);
+
+  // automatically go to next step if all available conditions are selected
+  React.useEffect(() => {
+    if (
+      activeStep === 0 &&
+      conditionsMet.length > 0 &&
+      Object.keys(currentNode).length === 0
+    ) {
+      setActiveStep((step) => step + 1);
+    }
+  }, [activeStep, conditionsMet, currentNode]);
 
   const handleNextStep = () => {
     if (activeStep <= steps.length) {
@@ -282,6 +310,11 @@ export default function RequirementsPage() {
   };
 
   const handlePreviousStep = () => {
+    // allow resetting conditions if going back to category selection
+    if (activeStep === 1) {
+      setConditionsMet([]);
+    }
+
     if (activeStep > 0) {
       setActiveStep((step) => step - 1);
     } else {

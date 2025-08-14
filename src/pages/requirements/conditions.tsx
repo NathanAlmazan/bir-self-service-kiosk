@@ -1,3 +1,5 @@
+import * as React from "react";
+// MUI
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardActions from "@mui/material/CardActions";
@@ -6,8 +8,6 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
-// Animation
-import { AnimatePresence, motion } from "motion/react";
 // Icons
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
@@ -27,12 +27,22 @@ export default function RequirementsCategories({
   handleNextStep,
   handlePreviousStep,
 }: CategoriesProps) {
+  const [filteredCategories, setFilteredCategories] = React.useState<string[]>(
+    []
+  );
+
+  React.useEffect(() => {
+    setFilteredCategories([...selected, ...categories]);
+  }, [selected, categories]);
+
   return (
     <Card>
       <CardContent>
         <Typography component="div" variant="h6" align="center">
           {`Please select what best describes your transaction. ${
-            categories.length > 1 && "You can select more than one."
+            filteredCategories.length > 1
+              ? "You may select more than one, if applicable."
+              : ""
           }`}
         </Typography>
         <Box
@@ -46,27 +56,17 @@ export default function RequirementsCategories({
             mt: 3,
           }}
         >
-          <AnimatePresence mode="wait">
-            {categories
-              .filter((category) => category !== "All")
-              .map((category) => (
-                <motion.div
-                  key={category}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Chip
-                    key={category}
-                    label={category}
-                    clickable
-                    color={selected.includes(category) ? "primary" : "default"}
-                    onClick={() => toggleCategory(category)}
-                  />
-                </motion.div>
-              ))}
-          </AnimatePresence>
+          {filteredCategories
+            .filter((category) => category !== "DEFAULT")
+            .map((category) => (
+              <Chip
+                key={category}
+                label={category}
+                clickable
+                color={selected.includes(category) ? "primary" : "default"}
+                onClick={() => toggleCategory(category)}
+              />
+            ))}
         </Box>
       </CardContent>
       <Divider />

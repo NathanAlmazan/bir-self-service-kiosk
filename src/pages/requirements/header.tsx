@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 // Icons
+import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined';
 import TimerOutlinedIcon from "@mui/icons-material/TimerOutlined";
 import PaymentOutlinedIcon from "@mui/icons-material/PaymentOutlined";
 
@@ -35,7 +36,9 @@ export default function RequirementsHeader({
           sx={{
             display: "flex",
             flexWrap: "wrap",
-            gap: 2,
+            alignItems: "center",
+            justifyContent: "flex-start",
+            gap: 2
           }}
         >
           <Stack spacing={1} direction="row">
@@ -52,9 +55,11 @@ export default function RequirementsHeader({
           </Stack>
           {checklist && (
             <Button
+              size="large"
               variant="text"
               color="primary"
               onClick={() => setOpen(true)}
+              startIcon={<PrintOutlinedIcon />}
             >
               Print Checklist of Requirements
             </Button>
