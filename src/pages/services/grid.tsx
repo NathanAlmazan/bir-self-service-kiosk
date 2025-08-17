@@ -19,17 +19,17 @@ export type Services = {
 const services: Services[] = [
   {
     title: "Registration",
-    image: "/icons/registration.png",
+    image: import.meta.env.BASE_URL + "/icons/registration.png",
     color: "primary",
   },
   {
     title: "Filing & Payment",
-    image: "/icons/payment.png",
+    image: import.meta.env.BASE_URL + "/icons/payment.png",
     color: "success",
   },
   {
     title: "Certificate & Clearance",
-    image: "/icons/clearance.png",
+    image: import.meta.env.BASE_URL + "/icons/clearance.png",
     color: "warning",
   },
   // {

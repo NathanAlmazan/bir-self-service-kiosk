@@ -45,7 +45,7 @@ export default function KioskReviewForm({
             height: 96,
           }}
         >
-          <img alt="very-bad" src="/emoji/very-bad.svg" />
+          <img alt="very-bad" src={import.meta.env.BASE_URL + "/emoji/very-bad.svg"} />
           <Typography variant="h6">Bad</Typography>
         </IconButton>
         <IconButton
@@ -57,7 +57,7 @@ export default function KioskReviewForm({
             height: 96,
           }}
         >
-          <img alt="bad" src="/emoji/bad.svg" />
+          <img alt="bad" src={import.meta.env.BASE_URL + "/emoji/bad.svg"} />
           <Typography variant="h6">Okay</Typography>
         </IconButton>
         <IconButton
@@ -69,7 +69,7 @@ export default function KioskReviewForm({
             height: 96,
           }}
         >
-          <img alt="satisfactory" src="/emoji/satisfactory.svg" />
+          <img alt="satisfactory" src={import.meta.env.BASE_URL + "/emoji/satisfactory.svg"} />
           <Typography variant="h6">Fair</Typography>
         </IconButton>
         <IconButton
@@ -81,7 +81,7 @@ export default function KioskReviewForm({
             height: 96,
           }}
         >
-          <img alt="good" src="/emoji/good.svg" />
+          <img alt="good" src={import.meta.env.BASE_URL + "/emoji/good.svg"} />
           <Typography variant="h6">Nice</Typography>
         </IconButton>
         <IconButton
@@ -93,7 +93,7 @@ export default function KioskReviewForm({
             height: 96,
           }}
         >
-          <img alt="very-good" src="/emoji/very-good.svg" />
+          <img alt="very-good" src={import.meta.env.BASE_URL + "/emoji/very-good.svg"} />
           <Typography variant="h6">Great</Typography>
         </IconButton>
       </Box>

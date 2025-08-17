@@ -9,7 +9,7 @@ export default function WelcomeCard() {
       sx={{
         height: "100%",
         color: "white",
-        backgroundImage: 'url("/bg/kiosk.jpg")',
+        backgroundImage: `url("${import.meta.env.BASE_URL}/bg/kiosk.jpg")`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         minHeight: 360

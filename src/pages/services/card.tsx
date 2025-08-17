@@ -59,7 +59,7 @@ export default function ServiceCard({
       </Box>
 
       <SvgColor
-        src="/bg/shape-square.svg"
+        src={import.meta.env.BASE_URL + "/bg/shape-square.svg"}
         sx={{
           top: 0,
           right: -36,

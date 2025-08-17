@@ -151,5 +151,5 @@ const backgroundStyles = (): CSSObject => ({
   backgroundSize: "cover",
   backgroundRepeat: "no-repeat",
   backgroundPosition: "center bottom",
-  backgroundImage: 'url("/bg/overlay.jpg")',
+  backgroundImage: `url("${import.meta.env.BASE_URL}/bg/overlay.jpg")`,
 });

@@ -65,7 +65,7 @@ export default function ReceiptPreview({
         >
           <Box
             component="img"
-            src="/logo/bir-logo-full.png"
+            src={import.meta.env.BASE_URL + "/logo/bir-logo-full.png"}
             style={{ width: 180, height: 25 }}
           />
         </Box>

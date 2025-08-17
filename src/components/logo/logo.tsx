@@ -41,7 +41,7 @@ export function Logo({
       ]}
       {...other}
     >
-      {isSingle ? <img alt="bir-logo" src="/logo/bir-logo.png" /> : <img alt="bir-logo" src="/logo/bir-logo-full.png" />}
+      {isSingle ? <img alt="bir-logo" src={import.meta.env.BASE_URL + "/logo/bir-logo.png"} /> : <img alt="bir-logo" src={import.meta.env.BASE_URL + "/logo/bir-logo-full.png"} />}
     </LogoRoot>
   );
 }

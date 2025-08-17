@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Outlet, RouterProvider, createBrowserRouter } from 'react-router';
+import { Outlet, RouterProvider, createHashRouter } from 'react-router';
 
 import App from 'src/app';
 import routes from 'src/routes';
@@ -8,7 +8,7 @@ import { ErrorBoundary } from 'src/routes/components';
 
 // ----------------------------------------------------------------------
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     Component: () => (
       <App>
