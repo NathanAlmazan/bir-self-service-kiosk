@@ -71,11 +71,6 @@ export default function TransactionsPage() {
   React.useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        console.log(
-          "Fetching transactions for service:",
-          service?.split("-").join(" & ").toUpperCase()
-        );
-
         setIsLoading(true);
 
         const querySnapshot = await getDocs(
@@ -106,14 +101,19 @@ export default function TransactionsPage() {
         setTransactions(serviceTransactions);
       } catch (error) {
         console.error("Error fetching transactions:", error);
+        router.push("/404");
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchTransactions();
-  }, [service]);
+  }, [router, service]);
 
   React.useEffect(() => {
     if (transactions.length > 0) {
+      setIsLoading(true);
+      
       setFiltered(
         transactions.filter(
           (t) =>
@@ -121,9 +121,9 @@ export default function TransactionsPage() {
             t.name.toLowerCase().includes(searchQuery.toLowerCase())
         )
       );
-    }
 
-    setIsLoading(false);
+      setIsLoading(false);
+    }
   }, [categories, transactions, tabValue, searchQuery]);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {

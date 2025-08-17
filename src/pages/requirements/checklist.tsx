@@ -42,7 +42,32 @@ export default function RequirementsChecklist({
   handlePreviousStep,
 }: ChecklistProps) {
   const [submitted, setSubmitted] = React.useState(false);
+  const [groupedRequirements, setGroupedRequirements] = React.useState<
+    Record<string, Requirements[]>
+  >({});
+  const [independentRequirements, setIndependentRequirements] = React.useState<
+    Requirements[]
+  >([]);
   const successHeadingRef = React.useRef<HTMLHeadingElement>(null);
+
+  React.useEffect(() => {
+    const grouped: Record<string, Requirements[]> = {};
+    const independent: Requirements[] = [];
+
+    requirements.forEach((req) => {
+      if (req.group) {
+        if (!grouped[req.group]) {
+          grouped[req.group] = [];
+        }
+        grouped[req.group].push(req);
+      } else {
+        independent.push(req);
+      }
+    });
+
+    setGroupedRequirements(grouped);
+    setIndependentRequirements(independent);
+  }, [requirements]);
 
   const handleSubmit = () => {
     setSubmitted(true);
@@ -171,18 +196,16 @@ export default function RequirementsChecklist({
                   </Box>
                 }
               >
-                {requirements.map((req) => {
-                  const { id, name, note, source } = req;
-
-                  return (
-                    <div key={id}>
+                {Object.entries(groupedRequirements).map(([group, reqs]) => (
+                  <div key={group}>
+                    {reqs.map((req, index) => (
                       <ListItem
-                        key={name}
+                        key={req.id}
                         secondaryAction={
                           <Checkbox
                             edge="end"
-                            onChange={handleToggle(id)}
-                            checked={checked.includes(id)}
+                            onChange={handleToggle(req.id)}
+                            checked={checked.includes(req.id)}
                             size="large"
                           />
                         }
@@ -190,12 +213,13 @@ export default function RequirementsChecklist({
                         <ListItemText
                           primary={
                             <Typography variant="body1" gutterBottom>
-                              {name}
+                              {req.name +
+                                (index === reqs.length - 1 ? "" : "; OR")}
                             </Typography>
                           }
                           secondary={
                             <>
-                              {note && (
+                              {req.note && (
                                 <Typography
                                   variant="body2"
                                   component="span"
@@ -204,25 +228,78 @@ export default function RequirementsChecklist({
                                   {req.note}
                                 </Typography>
                               )}
-                              {source && (
+                              {req.source && (
                                 <Button
                                   variant="text"
                                   size="small"
                                   onClick={() =>
-                                    showQRCode(source.label, source.link)
+                                    showQRCode(
+                                      req.source!.label,
+                                      req.source!.link
+                                    )
                                   }
                                 >
-                                  {source.label}
+                                  {req.source!.label}
                                 </Button>
                               )}
                             </>
                           }
                         />
                       </ListItem>
-                      <Divider variant="inset" component="li" />
-                    </div>
-                  );
-                })}
+                    ))}
+                    <Divider variant="inset" component="li" />
+                  </div>
+                ))}
+                {independentRequirements.map((req) => (
+                  <div key={req.id}>
+                    <ListItem
+                      secondaryAction={
+                        <Checkbox
+                          edge="end"
+                          onChange={handleToggle(req.id)}
+                          checked={checked.includes(req.id)}
+                          size="large"
+                        />
+                      }
+                    >
+                      <ListItemText
+                        primary={
+                          <Typography variant="body1" gutterBottom>
+                            {req.name}
+                          </Typography>
+                        }
+                        secondary={
+                          <>
+                            {req.note && (
+                              <Typography
+                                variant="body2"
+                                component="span"
+                                fontStyle="italic"
+                              >
+                                {req.note}
+                              </Typography>
+                            )}
+                            {req.source && (
+                              <Button
+                                variant="text"
+                                size="small"
+                                onClick={() =>
+                                  showQRCode(
+                                    req.source!.label,
+                                    req.source!.link
+                                  )
+                                }
+                              >
+                                {req.source!.label}
+                              </Button>
+                            )}
+                          </>
+                        }
+                      />
+                    </ListItem>
+                    <Divider variant="inset" component="li" />
+                  </div>
+                ))}
               </List>
             </motion.div>
           )}
@@ -260,6 +337,7 @@ export default function RequirementsChecklist({
               size="large"
               variant="contained"
               onClick={handleSubmit}
+              disabled={checked.length === 0}
               endIcon={<ArrowForwardIosOutlinedIcon />}
             >
               Verify

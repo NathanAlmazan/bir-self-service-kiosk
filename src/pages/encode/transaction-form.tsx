@@ -572,8 +572,6 @@ export default function TransactionForm() {
     }
   };
 
-  console.log(requirements);
-
   return (
     <Container maxWidth="lg" sx={{ py: 4, zIndex: 2 }}>
       <Typography variant="h4" gutterBottom>

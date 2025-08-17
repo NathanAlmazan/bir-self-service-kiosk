@@ -47,13 +47,15 @@ function a11yProps(index: number) {
 type UserAgreementProps = {
   open: boolean;
   handleClose: () => void;
-  checklistUrl: string;
+  pdfLink: string;
+  imageLink: string;
 };
 
 export default function PrintChecklistDialog({
   open,
   handleClose,
-  checklistUrl,
+  pdfLink,
+  imageLink,
 }: UserAgreementProps) {
   const [value, setValue] = React.useState(0);
 
@@ -85,13 +87,12 @@ export default function PrintChecklistDialog({
             <Tab label="Download" {...a11yProps(1)} />
           </Tabs>
         </Box>
-        <CustomTabPanel value={value} index={0} sx={{ height: "calc(100vh - 120px)", padding: 0 }}>
-          <iframe
-            src={checklistUrl}
-            title="PDF Preview"
-            width="100%"
-            height="100%"
-          />
+        <CustomTabPanel
+          value={value}
+          index={0}
+          sx={{ display: "flex", justifyContent: "center" }}
+        >
+          <Box component="img" alt="checklist-preview" src={imageLink} />
         </CustomTabPanel>
         <CustomTabPanel value={value} index={1}>
           <Box
@@ -100,13 +101,18 @@ export default function PrintChecklistDialog({
               justifyContent: "center",
               alignItems: "center",
               flexDirection: "column",
-              my: 3
+              my: 3,
             }}
           >
-            <Typography variant="h6" component="div" align="center" sx={{ mb: 3 }}>
+            <Typography
+              variant="h6"
+              component="div"
+              align="center"
+              sx={{ mb: 3 }}
+            >
               Please scan the QR code to download the checklist.
             </Typography>
-            <QRCode size={256} value={checklistUrl} />
+            <QRCode size={256} value={pdfLink} />
           </Box>
         </CustomTabPanel>
       </Box>

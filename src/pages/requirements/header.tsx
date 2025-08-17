@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 // Icons
-import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined';
+import PrintOutlinedIcon from "@mui/icons-material/PrintOutlined";
 import TimerOutlinedIcon from "@mui/icons-material/TimerOutlined";
 import PaymentOutlinedIcon from "@mui/icons-material/PaymentOutlined";
 
@@ -15,7 +15,10 @@ type HeaderProps = {
   title: string;
   duration: string;
   fee: string;
-  checklist?: string;
+  checklist?: {
+    pdfLink: string;
+    imageLink: string;
+  };
 };
 
 export default function RequirementsHeader({
@@ -38,7 +41,7 @@ export default function RequirementsHeader({
             flexWrap: "wrap",
             alignItems: "center",
             justifyContent: "flex-start",
-            gap: 2
+            gap: 2,
           }}
         >
           <Stack spacing={1} direction="row">
@@ -70,7 +73,8 @@ export default function RequirementsHeader({
         <PrintChecklistDialog
           open={open}
           handleClose={() => setOpen(false)}
-          checklistUrl={checklist}
+          pdfLink={checklist.pdfLink}
+          imageLink={checklist.imageLink}
         />
       )}
     </>

@@ -14,7 +14,8 @@ type PreviewProps = {
   transaction: Transaction;
   taxpayer: Taxpayer;
   complete: boolean;
-  requirements: string[];
+  independentRequirements: string[];
+  groupedRequirements: Record<string, string[]>;
 };
 
 const formatDate = (isoString: string) => {
@@ -39,7 +40,8 @@ export default function ReceiptPreview({
   transaction,
   taxpayer,
   complete,
-  requirements,
+  independentRequirements,
+  groupedRequirements,
 }: PreviewProps) {
   const theme = useTheme();
   return (
@@ -165,16 +167,32 @@ export default function ReceiptPreview({
           >
             <Typography fontSize={10} textAlign="left" fontWeight="bold">
               {`Checklist of Incomplete ${
-                requirements.length > 1 ? "Requirements" : "Requirement"
+                independentRequirements.length > 1 ||
+                Object.keys(groupedRequirements).length > 0
+                  ? "Requirements"
+                  : "Requirement"
               }:`}
             </Typography>
             <List dense>
-              {requirements.map((requirement, index) => (
+              {Object.entries(groupedRequirements).map(
+                ([group, requirements], index) => (
+                  <ListItem key={group} disablePadding>
+                    <ListItemText
+                      primary={
+                        <Typography fontSize={10}>{`${
+                          index + 1
+                        }. ${requirements.join("; OR ")}`}</Typography>
+                      }
+                    />
+                  </ListItem>
+                )
+              )}
+              {independentRequirements.map((requirement, index) => (
                 <ListItem key={index} disablePadding>
                   <ListItemText
                     primary={
                       <Typography fontSize={10}>{`${
-                        index + 1
+                        index + Object.keys(groupedRequirements).length + 1
                       }. ${requirement}`}</Typography>
                     }
                   />

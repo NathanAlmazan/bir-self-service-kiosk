@@ -3,106 +3,337 @@ import * as React from "react";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableContainer from '@mui/material/TableContainer';
-import TablePagination from '@mui/material/TablePagination';
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableContainer from "@mui/material/TableContainer";
+import TablePagination from "@mui/material/TablePagination";
+// Firebase
+import { db } from "src/firebase";
+import {
+  getDocs,
+  collection,
+  query,
+  where,
+  Timestamp,
+} from "firebase/firestore";
 // Components
+import { useRouter } from "src/routes/hooks";
 import { Scrollbar } from "src/components/scrollbar";
+import Fallback from "src/components/fallback";
 import QueueTableToolbar from "./table-toolbar";
+import QueueTableRow from "./table-row";
 import QueueTableHead from "./table-head";
-// Icons
-import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
-import { StringValueToken } from "html2canvas/dist/types/css/syntax/tokenizer";
+import TableNoData from "./table-no-data";
 
-export type Queue = {
+const FilterDrawer = React.lazy(() => import("./filter-drawer"));
+
+export type QueueRaw = {
   id: string;
   firstName: string;
   lastName: string;
   rdo: string;
-  receiptUrl: string;
-  service: "REGISTRATION" | "FILING & PAYMENT" | "CERTIFICATE & CLEARANCE";
+  service: string;
   transaction: string;
   complete: boolean;
   verified: boolean;
-  submittedAt: Date;
+  submittedAt: Timestamp;
 };
 
-export type QueueTableRow = {
+export type Queue = {
   id: string;
   name: string;
   rdo: string;
-  transaction: {
-    name: string;
-    service: string;
-  };
-  status: "COMPLETE REQUIREMENTS" | "INCOMPLETE REQUIREMENTS" | "TRANSACTION STARTED";
+  transaction: string;
+  status: string;
   submittedAt: Date;
-  receiptUrl: string;
+  search: string;
 };
 
 export default function QueuePage() {
+  // ================ Filter Drawer =================
+  const [filterOpen, setFilterOpen] = React.useState<boolean>(false);
+  const [filter, setFilter] = React.useState<Record<string, string>>({
+    rdo: "ALL",
+    service: "ALL",
+    status: "ALL",
+  });
+
+  const handleToggleFilter = () => {
+    setFilterOpen((prev) => !prev);
+  };
+
+  const handleFilterChange = (field: string, value: string) => {
+    setFilter((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // =============== Fetch Queue Data =================
+  const router = useRouter();
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
+  const [rawQueue, setRawQueue] = React.useState<Queue[]>([]);
+
+  React.useEffect(() => {
+    const fetchQueue = async () => {
+      try {
+        setIsLoading(true);
+
+        // get week range
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+
+        // calculate start of week (Sunday)
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - dayOfWeek);
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        // calculate end of week (Saturday)
+        const endOfWeek = new Date(now);
+        endOfWeek.setDate(now.getDate() + (6 - dayOfWeek));
+        endOfWeek.setHours(23, 59, 59, 999);
+
+        const queryBuilder = [
+          where("submittedAt", ">=", Timestamp.fromDate(startOfWeek)),
+          where("submittedAt", "<=", Timestamp.fromDate(endOfWeek)),
+        ];
+
+        if (filter.rdo !== "ALL") {
+          queryBuilder.push(where("rdo", "==", filter.rdo));
+        }
+
+        if (filter.service !== "ALL") {
+          queryBuilder.push(where("service", "==", filter.service));
+        }
+
+        if (filter.status !== "ALL") {
+          if (filter.status === "Started Transaction") {
+            queryBuilder.push(where("verified", "==", true));
+          } else if (filter.status === "Complete Requirements") {
+            queryBuilder.push(where("complete", "==", true));
+          } else if (filter.status === "Incomplete Requirements") {
+            queryBuilder.push(where("complete", "==", false));
+          }
+        }
+
+        const querySnapshot = await getDocs(
+          query(collection(db, "taxpayers"), ...queryBuilder)
+        );
+
+        const queueData: Queue[] = querySnapshot.docs.map((doc) => {
+          const data = doc.data() as QueueRaw;
+          return {
+            id: doc.id,
+            name: data.firstName + " " + data.lastName,
+            rdo: data.rdo,
+            transaction: data.service + " — " + data.transaction,
+            status: getStatus(data.complete, data.verified),
+            submittedAt: data.submittedAt.toDate(),
+            search: `${data.firstName} ${data.lastName} ${data.rdo} ${data.service} ${data.transaction}`,
+          };
+        });
+
+        setRawQueue(queueData);
+      } catch (error) {
+        console.error("Error fetching transaction:", error);
+        router.push("/404");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchQueue();
+  }, [router, filter]);
+
+  // ==================== Table Pagination ====================
   const [page, setPage] = React.useState(0);
-  const [orderBy, setOrderBy] = React.useState('submittedAt');
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
-  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
+
+  const handleChangePage = (_: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  // =============== Sorting and Filtering =================
   const [filterQuery, setFilterQuery] = React.useState("");
-  const [filteredQueue, setFilteredQueue] = React.useState<QueueTableRow[]>([]);
+  const [filteredQueue, setFilteredQueue] = React.useState<Queue[]>([]);
+  const [order, setOrder] = React.useState<"asc" | "desc">("desc");
+  const [orderBy, setOrderBy] = React.useState<keyof Queue>("id");
 
+  React.useEffect(() => {
+    setIsLoading(true);
 
+    const filtered = applyFilter({
+      inputData: rawQueue,
+      filterQuery,
+      orderBy,
+      order,
+    });
 
-  const handleFilterQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFilteredQueue(filtered);
+    setIsLoading(false);
+    setPage(0);
+  }, [rawQueue, filterQuery, orderBy, order]);
+
+  const handleSort = React.useCallback(
+    (id: keyof Queue, disable: boolean) => {
+      if (!disable) {
+        const isAsc = orderBy === id && order === "asc";
+        setOrder(isAsc ? "desc" : "asc");
+        setOrderBy(id);
+      }
+    },
+    [order, orderBy]
+  );
+
+  const handleFilterQueryChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setFilterQuery(event.target.value);
   };
 
   return (
-    <Container maxWidth="md" sx={{ zIndex: 2 }}>
-      <Box
-        sx={{
-          mb: 5,
-          display: 'flex',
-          alignItems: 'center',
-        }}
-      >
-        <Typography variant="h4" sx={{ flexGrow: 1 }}>
-          Transactin Queue
-        </Typography>
-        <Button
-          variant="contained"
-          color="inherit"
-          startIcon={<QrCodeScannerIcon />}
-        >
-          Scan Receipt
-        </Button>
-      </Box>
-      <Card>
-        <QueueTableToolbar
-          filterQuery={filterQuery}
-          handleFilterChange={handleFilterQueryChange}
+    <>
+      {isLoading ? (
+        <Fallback />
+      ) : (
+        <Container maxWidth="lg" sx={{ zIndex: 2 }}>
+          <Box
+            sx={{
+              mb: 5,
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Typography variant="h4" sx={{ flexGrow: 1 }}>
+              Transaction Queue
+            </Typography>
+          </Box>
+          <Card>
+            <QueueTableToolbar
+              filterQuery={filterQuery}
+              handleToggleFilter={handleToggleFilter}
+              handleFilterChange={handleFilterQueryChange}
+            />
+            <Scrollbar>
+              <TableContainer sx={{ overflow: "unset" }}>
+                <Table sx={{ minWidth: 800 }}>
+                  <QueueTableHead
+                    order={order}
+                    orderBy={orderBy}
+                    handleSort={handleSort}
+                    headLabel={[
+                      { id: "id", label: "Queue No." },
+                      { id: "name", label: "Name" },
+                      { id: "rdo", label: "Revenue District" },
+                      { id: "transaction", label: "Transaction" },
+                      { id: "submittedAt", label: "Datetime Submitted" },
+                      { id: "status", label: "Status" },
+                    ]}
+                  />
+
+                  <TableBody>
+                    {filteredQueue
+                      .slice(
+                        page * rowsPerPage,
+                        page * rowsPerPage + rowsPerPage
+                      )
+                      .map((row) => (
+                        <QueueTableRow key={row.id} row={row} />
+                      ))}
+
+                    {filterQuery && filteredQueue.length === 0 && (
+                      <TableNoData searchQuery={filterQuery} />
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Scrollbar>
+
+            <TablePagination
+              component="div"
+              page={page}
+              count={filteredQueue.length}
+              rowsPerPage={rowsPerPage}
+              onPageChange={handleChangePage}
+              rowsPerPageOptions={[5, 10, 20]}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
+          </Card>
+        </Container>
+      )}
+
+      {filterOpen && (
+        <FilterDrawer
+          open={filterOpen}
+          onClose={handleToggleFilter}
+          filter={filter}
+          setFilter={handleFilterChange}
         />
-        <Scrollbar>
-          <TableContainer sx={{ overflow: 'unset' }}>
-            <Table sx={{ minWidth: 800 }}>
-              <QueueTableHead
-                orderBy=""
-                order="asc"
-                headLabel={[
-                  { id: 'id', label: 'Queue No.' },
-                  { id: 'name', label: 'Name' },
-                  { id: 'rdo', label: 'Revenue District' },
-                  { id: 'transaction', label: 'Transaction' },
-                  { id: 'status', label: 'Status' },
-                  { id: 'submittedAt', label: 'Datetime Submitted' },
-                  { id: 'receipt', label: '', align: 'right' }
-                ]}
-                handleSort={() => { }}
-              />
-            </Table>
-          </TableContainer>
-        </Scrollbar>
-      </Card>
-    </Container>
+      )}
+    </>
   );
+}
+
+function getStatus(completed: boolean, verified?: boolean) {
+  if (completed && verified) return "Started Transaction";
+  else if (completed && !verified) return "Complete Requirements";
+  else if (!completed && !verified) return "Incomplete Requirements";
+  return "Unknown Status";
+}
+
+function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
+  if (b[orderBy] < a[orderBy]) {
+    return -1;
+  }
+  if (b[orderBy] > a[orderBy]) {
+    return 1;
+  }
+  return 0;
+}
+
+function getComparator<Key extends keyof Queue>(
+  order: "asc" | "desc",
+  orderBy: Key
+): (a: Queue, b: Queue) => number {
+  return order === "desc"
+    ? (a, b) => descendingComparator<Queue>(a, b, orderBy)
+    : (a, b) => -descendingComparator<Queue>(a, b, orderBy);
+}
+
+type ApplyFilterProps = {
+  inputData: Queue[];
+  filterQuery: string;
+  orderBy: keyof Queue;
+  order: "asc" | "desc";
+};
+
+function applyFilter({
+  inputData,
+  filterQuery,
+  orderBy,
+  order,
+}: ApplyFilterProps) {
+  const stabilizedThis = inputData.map((el, index) => [el, index] as const);
+
+  stabilizedThis.sort((a, b) => {
+    const sorted = getComparator(order, orderBy)(a[0], b[0]);
+    if (sorted !== 0) return sorted;
+    return a[1] - b[1];
+  });
+
+  inputData = stabilizedThis.map((el) => el[0]);
+
+  if (filterQuery) {
+    inputData = inputData.filter(
+      (queue) =>
+        queue.search.toLowerCase().indexOf(filterQuery.toLowerCase()) !== -1
+    );
+  }
+
+  return inputData;
 }

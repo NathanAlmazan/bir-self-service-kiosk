@@ -9,8 +9,8 @@ import Fallback from "src/components/fallback";
 const ServicesPage = lazy(() => import("src/pages/services"));
 const TransactionsPage = lazy(() => import("src/pages/transactions"));
 const RequirementsPage = lazy(() => import("src/pages/requirements"));
-const EncodePage = lazy(() => import("src/pages/encode"));
 const VerificationPage = lazy(() => import("src/pages/verify"));
+const QueuePage = lazy(() => import("src/pages/queue"));
 const NotFoundPage = lazy(() => import("src/pages/not-found"));
 
 const routes: RouteObject[] = [
@@ -26,7 +26,7 @@ const routes: RouteObject[] = [
       { index: true, element: <ServicesPage /> },
       { path: "transactions/:service", element: <TransactionsPage /> },
       { path: "requirements/:uuid", element: <RequirementsPage /> },
-      { path: "encode", element: <EncodePage /> }
+      { path: "queue", element: <QueuePage /> },
     ],
   },
   {

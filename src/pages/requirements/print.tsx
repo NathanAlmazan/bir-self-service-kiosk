@@ -110,6 +110,32 @@ export default function PrintReceiptForm({
     return () => clearTimeout(timeout);
   }, [taxpayer]);
 
+  const [groupedRequirements, setGroupedRequirements] = React.useState<
+    Record<string, string[]>
+  >({});
+  const [independentRequirements, setIndependentRequirements] = React.useState<
+    string[]
+  >([]);
+
+  React.useEffect(() => {
+    const grouped: Record<string, string[]> = {};
+    const independent: string[] = [];
+
+    missingRequirements.forEach((req) => {
+      if (req.group) {
+        if (!grouped[req.group]) {
+          grouped[req.group] = [];
+        }
+        grouped[req.group].push(req.name);
+      } else {
+        independent.push(req.name);
+      }
+    });
+
+    setGroupedRequirements(grouped);
+    setIndependentRequirements(independent);
+  }, [missingRequirements]);
+
   return (
     <Stack
       spacing={3}
@@ -180,9 +206,10 @@ export default function PrintReceiptForm({
         complete={complete}
         transaction={transaction}
         taxpayer={taxpayer}
-        requirements={missingRequirements.map((req) => req.name)}
+        groupedRequirements={groupedRequirements}
+        independentRequirements={independentRequirements}
       />
-      <Button size="large" variant="outlined" onClick={handleNextStep}>
+      <Button size="large" variant="outlined" disabled={!receiptImageUrl} onClick={handleNextStep}>
         Review Self-Service Kiosk
       </Button>
     </Stack>

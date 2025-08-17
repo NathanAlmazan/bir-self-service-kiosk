@@ -23,6 +23,7 @@ import {
   getCountFromServer,
   setDoc,
   updateDoc,
+  Timestamp
 } from "firebase/firestore";
 // Components
 import Fallback from "src/components/fallback";
@@ -34,8 +35,8 @@ import PrintReceiptForm from "./print";
 import KioskReviewForm from "./review";
 
 const ErrorSnackbar = React.lazy(() => import("./error"));
-const RequirementsQRCode = React.lazy(() => import("./qr-code"));
 const UserAgreement = React.lazy(() => import("./agreement"));
+const RequirementsQRCode = React.lazy(() => import("./qr-code"));
 
 export type Requirements = {
   id: string;
@@ -57,7 +58,10 @@ export type Transaction = {
   duration: string;
   service: string;
   category?: string;
-  checklist?: string;
+  checklist?: {
+    pdfLink: string;
+    imageLink: string;
+  };
   requirements?: Requirements[];
 };
 
@@ -163,14 +167,11 @@ const getNextDocumentId = async (
       today.getDate() + 1
     );
 
-    const startOfDayISO = startOfDay.toISOString();
-    const endOfDayISO = endOfDay.toISOString();
-
     const countQuery = query(
       collection(db, "taxpayers"),
       where("service", "==", service),
-      where("submittedAt", ">=", startOfDayISO),
-      where("submittedAt", "<", endOfDayISO)
+      where("submittedAt", ">=", Timestamp.fromDate(startOfDay)),
+      where("submittedAt", "<", Timestamp.fromDate(endOfDay))
     );
 
     const snapshot = await getCountFromServer(countQuery);
@@ -348,15 +349,18 @@ export default function RequirementsPage() {
 
   // handle missing requirements
   React.useEffect(() => {
-    if (filteredRequirements.length > 0) {
+    if (filteredRequirements.length > 0 && checkedRequirements.length > 0) {
       const missing = getMissingRequirements(
         filteredRequirements,
         checkedRequirements
       );
-      setMissingRequirements(missing);
 
       if (missing.length === 0) {
         setCompleteRequirements(true);
+        setMissingRequirements([]);
+      } else {
+        setCompleteRequirements(false);
+        setMissingRequirements(missing);
       }
     }
   }, [filteredRequirements, checkedRequirements]);
@@ -423,7 +427,7 @@ export default function RequirementsPage() {
     try {
       setIsSubmittingForm(true);
 
-      const submittedAt = new Date().toISOString();
+      const submittedAt = new Date();
 
       // prepare taxpayer data for submission
       const taxpayerSubmissionData = {
@@ -435,8 +439,8 @@ export default function RequirementsPage() {
         taxpayerTIN: taxpayerData.taxpayerTIN,
         service: transaction.service.toUpperCase(),
         complete: completeRequirements,
-        submittedAt,
-        transaction: doc(db, "transactions", transaction.id),
+        submittedAt: Timestamp.fromDate(submittedAt),
+        transaction: transaction.name,
         checked: checkedRequirements.map((id) =>
           doc(db, "transactions", transaction.id, "requirements", id)
         ),
@@ -453,7 +457,7 @@ export default function RequirementsPage() {
       // use setDoc with the auto-incremented ID instead of addDoc
       const autoIncrementedId = await getNextDocumentId(
         transaction.service.toUpperCase() as ServiceType,
-        submittedAt
+        submittedAt.toISOString()
       );
       const docRef = doc(db, "taxpayers", autoIncrementedId);
       await setDoc(docRef, taxpayerSubmissionData);
@@ -461,8 +465,8 @@ export default function RequirementsPage() {
       // update local state with the generated UUID
       setTaxpayerData((prev) => ({
         ...prev,
-        submittedAt,
         uuid: autoIncrementedId,
+        submittedAt: submittedAt.toISOString()
       }));
 
       handleNextStep();
