@@ -11,6 +11,7 @@ const TransactionsPage = lazy(() => import("src/pages/transactions"));
 const RequirementsPage = lazy(() => import("src/pages/requirements"));
 const VerificationPage = lazy(() => import("src/pages/verify"));
 const QueuePage = lazy(() => import("src/pages/queue"));
+const EncodePage = lazy(() => import("src/pages/encode"));
 const NotFoundPage = lazy(() => import("src/pages/not-found"));
 const InternalErrorPage = lazy(() => import("src/pages/internal-error"));
 
@@ -30,6 +31,14 @@ const routes: RouteObject[] = [
       { path: "verify/:uuid", element: <VerificationPage /> },
       { path: "queue", element: <QueuePage /> },
     ],
+  },
+  {
+    path: "encode",
+    element: <EncodePage />,
+  },
+   {
+    path: "encode/:uuid",
+    element: <EncodePage />,
   },
   {
     path: "404",
