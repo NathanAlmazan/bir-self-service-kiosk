@@ -134,7 +134,7 @@ export default function QueuePage() {
         setRawQueue(queueData);
       } catch (error) {
         console.error("Error fetching transaction:", error);
-        router.push("/404");
+        router.push("/500");
       } finally {
         setIsLoading(false);
       }

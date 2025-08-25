@@ -17,7 +17,7 @@ import { capitalize } from "es-toolkit";
 import { AnimatePresence, motion } from "motion/react";
 // Firebase
 import { db } from "src/firebase";
-import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 // Icons
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
@@ -55,7 +55,7 @@ export default function TransactionsPage() {
   const { service } = useParams();
   // Navigation
   const router = useRouter();
-  const handleNavigateBack = () => router.push("/");
+  const handleNavigateBack = () => router.push("/services");
   // Tabs
   const [tabValue, setTabValue] = React.useState<number>(0);
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -81,8 +81,7 @@ export default function TransactionsPage() {
               "==",
               service?.split("-").join(" & ").toUpperCase() || ""
             ),
-            where("published", "==", true),
-            orderBy("order", "asc")
+            where("published", "==", true)
           )
         );
 
@@ -113,11 +112,11 @@ export default function TransactionsPage() {
   React.useEffect(() => {
     if (transactions.length > 0) {
       setIsLoading(true);
-      
+
       setFiltered(
         transactions.filter(
           (t) =>
-            t.category === categories[tabValue] &&
+            (categories.length === 0 || t.category === categories[tabValue]) &&
             t.name.toLowerCase().includes(searchQuery.toLowerCase())
         )
       );
@@ -181,7 +180,12 @@ export default function TransactionsPage() {
             {/* Transaction Categories */}
             {categories.length > 1 && (
               <Grid size={12}>
-                <Tabs value={tabValue} onChange={handleTabChange}>
+                <Tabs
+                  value={tabValue}
+                  onChange={handleTabChange}
+                  variant="scrollable"
+                  scrollButtons="auto"
+                >
                   {categories.map((category) => (
                     <Tab key={category} label={category} />
                   ))}
@@ -189,28 +193,40 @@ export default function TransactionsPage() {
               </Grid>
             )}
             {/* Transaction Cards */}
-            <AnimatePresence>
-              {filtered.map((transaction) => (
-                <Grid key={transaction.id} size={{ sm: 12, md: 6, lg: 4 }}>
-                  <motion.div
-                    key={transaction.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.5 }}
-                    style={{ width: "100%", height: "100%" }}
+            <Grid size={12}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={tabValue}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.5 }}
+                  style={{ width: "100%", height: "100%" }}
+                >
+                  <Grid
+                    container
+                    spacing={3}
+                    maxWidth="lg"
+                    alignItems="stretch"
                   >
-                    <TransactionCard
-                      id={transaction.id}
-                      title={transaction.name}
-                      duration={transaction.duration}
-                      fee={transaction.fee}
-                      handleClick={handleSelectTransaction}
-                    />
-                  </motion.div>
-                </Grid>
-              ))}
-            </AnimatePresence>
+                    {filtered.map((transaction) => (
+                      <Grid
+                        key={transaction.id}
+                        size={{ sm: 12, md: 6, lg: 4 }}
+                      >
+                        <TransactionCard
+                          id={transaction.id}
+                          title={transaction.name}
+                          duration={transaction.duration}
+                          fee={transaction.fee}
+                          handleClick={handleSelectTransaction}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </motion.div>
+              </AnimatePresence>
+            </Grid>
 
             {/* No Transactions Found */}
             {filtered.length === 0 && (

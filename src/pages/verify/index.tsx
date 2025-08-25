@@ -6,18 +6,22 @@ import Typography from "@mui/material/Typography";
 import LinearProgress, {
   linearProgressClasses,
 } from "@mui/material/LinearProgress";
+import Button from "@mui/material/Button";
 // utils
 import { varAlpha } from "minimal-shared/utils";
 // icons
 import DangerousOutlinedIcon from "@mui/icons-material/DangerousOutlined";
 import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined";
+import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 // firebase
 import { db } from "src/firebase";
 import { doc, updateDoc } from "firebase/firestore";
+import { useRouter } from "src/routes/hooks";
 
 export default function VerificationPage() {
   const { uuid } = useParams();
 
+  const router = useRouter();
   const [loading, setLoading] = React.useState(true);
   const [errorMessage, setErrorMessage] = React.useState<string>();
 
@@ -33,7 +37,7 @@ export default function VerificationPage() {
 
       try {
         // update the taxpayer document with the rating
-        const taxpayerDocRef = doc(db, "taxpayers", atob(uuid));
+        const taxpayerDocRef = doc(db, "taxpayers", uuid);
         await updateDoc(taxpayerDocRef, {
           verified: true,
         });
@@ -48,6 +52,10 @@ export default function VerificationPage() {
 
     verifyTransaction();
   }, [uuid]);
+
+  const handleNavigateBack = () => {
+    router.push("/queue");
+  };
 
   return (
     <Box
@@ -84,6 +92,14 @@ export default function VerificationPage() {
           <Typography component="div" variant="h6">
             {"Sorry, transaction verification failed."}
           </Typography>
+          <Button
+            color="primary"
+            startIcon={<ArrowBackOutlinedIcon />}
+            onClick={handleNavigateBack}
+            sx={{ mt: 2 }}
+          >
+            {"Go back"}
+          </Button>
         </>
       ) : (
         <>
@@ -95,6 +111,14 @@ export default function VerificationPage() {
           <Typography component="div" variant="h6">
             {"Transaction verified successfully!"}
           </Typography>
+          <Button
+            color="primary"
+            startIcon={<ArrowBackOutlinedIcon />}
+            onClick={handleNavigateBack}
+            sx={{ mt: 2 }}
+          >
+            {"Go back"}
+          </Button>
         </>
       )}
     </Box>

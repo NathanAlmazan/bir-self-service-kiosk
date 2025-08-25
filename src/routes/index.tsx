@@ -12,6 +12,7 @@ const RequirementsPage = lazy(() => import("src/pages/requirements"));
 const VerificationPage = lazy(() => import("src/pages/verify"));
 const QueuePage = lazy(() => import("src/pages/queue"));
 const NotFoundPage = lazy(() => import("src/pages/not-found"));
+const InternalErrorPage = lazy(() => import("src/pages/internal-error"));
 
 const routes: RouteObject[] = [
   {
@@ -23,9 +24,10 @@ const routes: RouteObject[] = [
       </Layout>
     ),
     children: [
-      { index: true, element: <ServicesPage /> },
+      { path: "services", element: <ServicesPage /> },
       { path: "transactions/:service", element: <TransactionsPage /> },
       { path: "requirements/:uuid", element: <RequirementsPage /> },
+      { path: "verify/:uuid", element: <VerificationPage /> },
       { path: "queue", element: <QueuePage /> },
     ],
   },
@@ -34,8 +36,8 @@ const routes: RouteObject[] = [
     element: <NotFoundPage />,
   },
   {
-    path: "verify/:uuid",
-    element: <VerificationPage />,
+    path: "500",
+    element: <InternalErrorPage />,
   },
   { path: "*", element: <NotFoundPage /> },
 ];

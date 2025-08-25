@@ -221,9 +221,9 @@ export default function ReceiptPreview({
           }}
         >
           <QRCode
-            value={`${import.meta.env.VITE_BASE_URL}/verify/${btoa(
-              taxpayer.uuid
-            )}`}
+            value={btoa(
+              `${import.meta.env.BASE_URL.replace(/\/+$/, "")}#/verify/${taxpayer.uuid}`
+            )}
             size={128}
             style={{
               width: "100%",
