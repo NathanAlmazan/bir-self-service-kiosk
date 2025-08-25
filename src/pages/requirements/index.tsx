@@ -23,7 +23,7 @@ import {
   getCountFromServer,
   setDoc,
   updateDoc,
-  Timestamp
+  Timestamp,
 } from "firebase/firestore";
 // Components
 import Fallback from "src/components/fallback";
@@ -154,30 +154,31 @@ const getNextDocumentId = async (
   };
 
   try {
-    // get date range (start and end of day)
-    const today = new Date(submittedAt);
-    const startOfDay = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate()
-    );
-    const endOfDay = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate() + 1
-    );
+    // get week range
+    const now = new Date(submittedAt);
+    const dayOfWeek = now.getDay();
+
+    // calculate start of week (Sunday)
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - dayOfWeek);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    // calculate end of week (Saturday)
+    const endOfWeek = new Date(now);
+    endOfWeek.setDate(now.getDate() + (6 - dayOfWeek));
+    endOfWeek.setHours(23, 59, 59, 999);
 
     const countQuery = query(
       collection(db, "taxpayers"),
       where("service", "==", service),
-      where("submittedAt", ">=", Timestamp.fromDate(startOfDay)),
-      where("submittedAt", "<", Timestamp.fromDate(endOfDay))
+      where("submittedAt", ">=", Timestamp.fromDate(startOfWeek)),
+      where("submittedAt", "<", Timestamp.fromDate(endOfWeek))
     );
 
     const snapshot = await getCountFromServer(countQuery);
     const currentCount = snapshot.data().count;
 
-    return `${today.getTime()}-${serviceCode[service]}-${(currentCount + 1)
+    return `${now.getTime()}-${serviceCode[service]}-${(currentCount + 1)
       .toString()
       .padStart(4, "0")}`;
   } catch (error) {
@@ -191,7 +192,7 @@ export default function RequirementsPage() {
   // ========================= Navigation =========================
   const router = useRouter();
   const handleNavigateBack = () => router.back();
-  const handleNavigateHome = () => router.push("/");
+  const handleNavigateHome = () => router.push("/services");
 
   // ===================== Transaction Data =====================
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
@@ -466,7 +467,7 @@ export default function RequirementsPage() {
       setTaxpayerData((prev) => ({
         ...prev,
         uuid: autoIncrementedId,
-        submittedAt: submittedAt.toISOString()
+        submittedAt: submittedAt.toISOString(),
       }));
 
       handleNextStep();

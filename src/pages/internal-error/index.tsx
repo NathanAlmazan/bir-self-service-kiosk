@@ -7,7 +7,7 @@ import { Logo } from "src/components/logo";
 
 // ----------------------------------------------------------------------
 
-export default function NotFoundPage() {
+export default function InternalErrorPage() {
   return (
     <>
       <Logo sx={{ position: "fixed", top: 20, left: 20 }} />
@@ -23,25 +23,29 @@ export default function NotFoundPage() {
         }}
       >
         <Typography variant="h3" sx={{ mb: 2 }}>
-          Sorry, page not found!
+          Sorry, an internal error happened!
         </Typography>
 
         <Typography
-          sx={{ color: "text.secondary", maxWidth: 480, textAlign: "center", paddingBottom: 3 }}
+          sx={{
+            color: "text.secondary",
+            maxWidth: 480,
+            textAlign: "center",
+            paddingBottom: 3,
+          }}
         >
-          Sorry, we couldn't find the page you're looking for. Perhaps an
-          Internal Server Error occurred. Please contact the system
+          Sorry, an Internal Server Error occurred. Please contact the system
           administrator for assistance.
         </Typography>
 
         <Button
           component={RouterLink}
-          href="/services"
+          href="/queue"
           size="large"
           variant="contained"
           color="inherit"
         >
-          Go to Services
+          Go to Dashboard
         </Button>
       </Container>
     </>

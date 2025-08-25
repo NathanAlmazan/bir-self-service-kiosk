@@ -55,7 +55,7 @@ export default function TransactionsPage() {
   const { service } = useParams();
   // Navigation
   const router = useRouter();
-  const handleNavigateBack = () => router.push("/");
+  const handleNavigateBack = () => router.push("/services");
   // Tabs
   const [tabValue, setTabValue] = React.useState<number>(0);
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -113,11 +113,11 @@ export default function TransactionsPage() {
   React.useEffect(() => {
     if (transactions.length > 0) {
       setIsLoading(true);
-      
+
       setFiltered(
         transactions.filter(
           (t) =>
-            t.category === categories[tabValue] &&
+            (categories.length === 0 || t.category === categories[tabValue]) &&
             t.name.toLowerCase().includes(searchQuery.toLowerCase())
         )
       );
@@ -181,7 +181,12 @@ export default function TransactionsPage() {
             {/* Transaction Categories */}
             {categories.length > 1 && (
               <Grid size={12}>
-                <Tabs value={tabValue} onChange={handleTabChange}>
+                <Tabs
+                  value={tabValue}
+                  onChange={handleTabChange}
+                  variant="scrollable"
+                  scrollButtons="auto"
+                >
                   {categories.map((category) => (
                     <Tab key={category} label={category} />
                   ))}
