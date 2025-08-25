@@ -34,6 +34,7 @@ export type FormNode = {
   id: string;
   name: string;
   type: "condition" | "requirement";
+  format?: "single-select" | "multi-select";
   // transaction fields
   fee?: string;
   duration?: string;
@@ -54,6 +55,7 @@ const root: FormNode = {
   id: "root",
   name: "",
   type: "condition",
+  format: "single-select",
   children: [],
 };
 
@@ -142,6 +144,7 @@ export default function EncodePage() {
             id: "root",
             name: data.title,
             type: "condition",
+            format: data.format,
             fee: data.fee,
             duration: data.duration,
             service: data.service,
@@ -179,6 +182,7 @@ export default function EncodePage() {
       id: uuidv4(),
       name: "",
       type: "condition",
+      format: "single-select",
       children: [],
     };
 

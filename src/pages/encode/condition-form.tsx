@@ -3,6 +3,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
+import MenuItem from "@mui/material/MenuItem";
 
 import type { FormNode } from ".";
 
@@ -19,12 +20,16 @@ export default function ConditionForm({
   onCancel,
   editMode,
 }: ConditionFormProps) {
-  const [formValues, setFormValues] = React.useState({
+  const [formValues, setFormValues] = React.useState<{
+    name: string;
+    format: "single-select" | "multi-select";
+  }>({
     name: node.name,
+    format: "single-select",
   });
 
   React.useEffect(() => {
-    setFormValues({ name: node.name });
+    setFormValues({ name: node.name, format: node.format || "single-select" });
   }, [node]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,11 +45,12 @@ export default function ConditionForm({
     onUpdate({
       ...node,
       name: formValues.name,
+      format: formValues.format,
     });
   };
 
   const handleCancel = () => {
-    setFormValues({ name: node.name });
+    setFormValues({ name: node.name, format: node.format || "single-select" });
     onCancel();
   };
 
@@ -67,8 +73,27 @@ export default function ConditionForm({
         disabled={!editMode}
         required
       />
+      <TextField
+        required
+        label="Selection Type"
+        name="format"
+        variant="outlined"
+        fullWidth
+        value={formValues.format}
+        onChange={handleChange}
+        disabled={!editMode}
+        select
+      >
+        <MenuItem value="single-select">Single-Select</MenuItem>
+        <MenuItem value="multi-select">Multi-Select</MenuItem>
+      </TextField>
       {editMode && (
-        <Stack direction="row" justifyContent="flex-end" spacing={1} marginTop={2}>
+        <Stack
+          direction="row"
+          justifyContent="flex-end"
+          spacing={1}
+          marginTop={2}
+        >
           <Button variant="contained" color="primary" type="submit">
             Save Changes
           </Button>
