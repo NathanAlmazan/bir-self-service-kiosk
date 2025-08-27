@@ -77,7 +77,7 @@ export default function ConditionNode({
   };
 
   return (
-    <ListItem>
+    <ListItem sx={{ paddingLeft: 2, paddingTop: 2, paddingBottom: 2, paddingRight: 0 }}>
       <Accordion expanded={expand} onChange={handleToggleExpand}>
         <AccordionSummary selected={selected === data.id}>
           <Typography component="span">

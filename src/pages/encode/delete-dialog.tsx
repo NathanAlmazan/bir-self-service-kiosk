@@ -7,12 +7,12 @@ import Button from "@mui/material/Button";
 
 export default function DeleteDialog({
   open,
-  selected,
+  message,
   handleClose,
   handleDelete,
 }: {
   open: boolean;
-  selected: string;
+  message: string;
   handleClose: () => void;
   handleDelete: () => void;
 }) {
@@ -26,7 +26,7 @@ export default function DeleteDialog({
       <DialogTitle id="delete-dialog-title">Confirm Deletion</DialogTitle>
       <DialogContent>
         <DialogContentText id="delete-dialog-description">
-          Are you sure you want to delete{selected ? `"${selected}"?` : "?"} This action cannot be undone.
+          {message}
         </DialogContentText>
       </DialogContent>
       <DialogActions>

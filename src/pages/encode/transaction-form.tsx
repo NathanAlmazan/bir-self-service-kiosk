@@ -26,6 +26,7 @@ export default function TransactionForm({
   const [formValues, setFormValues] = React.useState({
     name: "",
     fee: "",
+    feeNotes: "",
     duration: "",
     service: "",
     category: "",
@@ -34,7 +35,12 @@ export default function TransactionForm({
   React.useEffect(() => {
     setFormValues({
       name: node.name || "",
-      fee: node.fee || "",
+      fee: node.fee?.includes(" — ")
+        ? node.fee.split(" — ")[0].trim()
+        : node.fee || "",
+      feeNotes: node.fee?.includes(" — ")
+        ? node.fee.split(" — ")[1].trim()
+        : "",
       duration: node.duration || "",
       service: node.service || "REGISTRATION",
       category: node.category || "",
@@ -60,7 +66,13 @@ export default function TransactionForm({
     onUpdate({
       ...node,
       name: formValues.name.split(/\s+/).join(" "),
-      fee: formValues.fee,
+      fee: formValues.feeNotes
+        ? `${
+            parseInt(formValues.fee) > 0 ? formValues.fee : "No Processing Fee"
+          } — ${formValues.feeNotes}`
+        : `${
+            parseInt(formValues.fee) > 0 ? formValues.fee : "No Processing Fee"
+          }`,
       duration: formValues.duration,
       service: formValues.service,
       category: formValues.category,
@@ -70,9 +82,14 @@ export default function TransactionForm({
   const handleCancel = () => {
     setFormValues({
       name: node.name || "",
-      fee: node.fee || "",
+      fee: node.fee?.includes(" — ")
+        ? node.fee.split(" — ")[0].trim()
+        : node.fee || "",
+      feeNotes: node.fee?.includes(" — ")
+        ? node.fee.split(" — ")[1].trim()
+        : "",
       duration: node.duration || "",
-      service: node.service || "",
+      service: node.service || "REGISTRATION",
       category: node.category || "",
     });
 
@@ -123,6 +140,17 @@ export default function TransactionForm({
               ),
             },
           }}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <TextField
+          label="Transaction Fee Notes"
+          name="feeNotes"
+          variant="outlined"
+          fullWidth
+          value={formValues.feeNotes}
+          onChange={handleChange}
+          disabled={!editMode}
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6 }}>

@@ -51,7 +51,7 @@ const formatServiceName = (service: string | undefined) => {
     : "";
 };
 
-export default function TransactionsPage() {
+export default function PublishedTransactionsPage() {
   const { service } = useParams();
   // Navigation
   const router = useRouter();

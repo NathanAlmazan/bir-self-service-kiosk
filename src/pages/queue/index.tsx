@@ -92,8 +92,7 @@ export default function QueuePage() {
         endOfWeek.setHours(23, 59, 59, 999);
 
         const queryBuilder = [
-          where("submittedAt", ">=", Timestamp.fromDate(startOfWeek)),
-          where("submittedAt", "<=", Timestamp.fromDate(endOfWeek)),
+          where("submittedAt", "<=", Timestamp.now()),
         ];
 
         if (filter.rdo !== "ALL") {
@@ -201,7 +200,7 @@ export default function QueuePage() {
       {isLoading ? (
         <Fallback />
       ) : (
-        <Container maxWidth="lg" sx={{ zIndex: 2 }}>
+        <Container maxWidth="lg" sx={{ zIndex: 2, marginBottom: 8 }}>
           <Box
             sx={{
               mb: 5,
