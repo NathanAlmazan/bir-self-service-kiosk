@@ -17,6 +17,21 @@ interface TransactionFormProps {
   editMode: boolean;
 }
 
+const convertTransactionFee = (fee?: string): string[] => {
+  if (fee?.includes(" — ")) {
+    let amount = fee.split(" — ")[0].trim();
+    let notes = fee.split(" — ")[1].trim();
+
+    if (amount.includes("No Processing Fee")) {
+      amount = "0.00";
+    }
+
+    return [amount, notes];
+  } else {
+    return [fee || "", ""];
+  }
+};
+
 export default function TransactionForm({
   node,
   onCancel,
@@ -33,25 +48,17 @@ export default function TransactionForm({
   });
 
   React.useEffect(() => {
+    const convertedFee = convertTransactionFee(node.fee);
+
     setFormValues({
       name: node.name || "",
-      fee: node.fee?.includes(" — ")
-        ? node.fee.split(" — ")[0].trim()
-        : node.fee || "",
-      feeNotes: node.fee?.includes(" — ")
-        ? node.fee.split(" — ")[1].trim()
-        : "",
+      fee: convertedFee[0],
+      feeNotes: convertedFee[1],
       duration: node.duration || "",
-      service: node.service || "REGISTRATION",
-      category: node.category || "",
+      service: node.service || "",
+      category: node.category || ""
     });
   }, [node]);
-
-  React.useEffect(() => {
-    if (formValues.service !== "REGISTRATION") {
-      setFormValues((prev) => ({ ...prev, category: "" }));
-    }
-  }, [formValues.service]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormValues({
@@ -75,22 +82,21 @@ export default function TransactionForm({
           }`,
       duration: formValues.duration,
       service: formValues.service,
-      category: formValues.category,
+      category:
+        formValues.service === "REGISTRATION" ? formValues.category : "",
     });
   };
 
   const handleCancel = () => {
+    const convertedFee = convertTransactionFee(node.fee);
+
     setFormValues({
       name: node.name || "",
-      fee: node.fee?.includes(" — ")
-        ? node.fee.split(" — ")[0].trim()
-        : node.fee || "",
-      feeNotes: node.fee?.includes(" — ")
-        ? node.fee.split(" — ")[1].trim()
-        : "",
+      fee: convertedFee[0],
+      feeNotes: convertedFee[1],
       duration: node.duration || "",
-      service: node.service || "REGISTRATION",
-      category: node.category || "",
+      service: node.service || "",
+      category: node.category || ""
     });
 
     onCancel();
