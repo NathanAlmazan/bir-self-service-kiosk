@@ -14,8 +14,8 @@ import Snackbar, { SnackbarCloseReason } from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 // Icons
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
-import NoteAddOutlinedIcon from '@mui/icons-material/NoteAddOutlined';
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import NoteAddOutlinedIcon from "@mui/icons-material/NoteAddOutlined";
 import CreateNewFolderOutlinedIcon from "@mui/icons-material/CreateNewFolderOutlined";
 import SaveIcon from "@mui/icons-material/Save";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -23,40 +23,20 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 // Firebase
 import { db } from "src/firebase";
 import { doc, setDoc, getDoc, Timestamp, deleteDoc } from "firebase/firestore";
+// Types
+import type { TransactionNode } from "src/pages/requirements/types";
 
 import { uuidv4 } from "minimal-shared/utils";
 
 import TreeNode from "./tree-node";
 import Fallback from "src/components/fallback";
 import { Scrollbar } from "src/components/scrollbar";
+import ConditionForm from "./condition-form";
+import TransactionForm from "./transaction-form";
+import RequirementForm from "./requirement-form";
+import DeleteDialog from "./delete-dialog";
 
-const ConditionForm = React.lazy(() => import("./condition-form"));
-const TransactionForm = React.lazy(() => import("./transaction-form"));
-const RequirementForm = React.lazy(() => import("./requirement-form"));
-const DeleteDialog = React.lazy(() => import("./delete-dialog"));
-
-export type FormNode = {
-  id: string;
-  name: string;
-  type: "condition" | "requirement";
-  format?: "single-select" | "multi-select";
-  // transaction fields
-  fee?: string;
-  duration?: string;
-  service?: string;
-  category?: string;
-  // requirement fields
-  note?: string;
-  group?: string;
-  optional?: boolean;
-  source?: {
-    label: string;
-    link: string;
-  };
-  children?: FormNode[];
-};
-
-const root: FormNode = {
+const root: TransactionNode = {
   id: "root",
   name: "",
   type: "condition",
@@ -65,10 +45,10 @@ const root: FormNode = {
 };
 
 const createNodeInTree = (
-  tree: FormNode,
+  tree: TransactionNode,
   parentNodeId: string,
-  newNode: FormNode
-): FormNode => {
+  newNode: TransactionNode
+): TransactionNode => {
   if (tree.id === parentNodeId) {
     return {
       ...tree,
@@ -84,7 +64,10 @@ const createNodeInTree = (
   };
 };
 
-const updateNodeInTree = (tree: FormNode, nodeToUpdate: FormNode): FormNode => {
+const updateNodeInTree = (
+  tree: TransactionNode,
+  nodeToUpdate: TransactionNode
+): TransactionNode => {
   if (tree.id === nodeToUpdate.id) {
     return nodeToUpdate;
   }
@@ -98,9 +81,9 @@ const updateNodeInTree = (tree: FormNode, nodeToUpdate: FormNode): FormNode => {
 };
 
 const removeNodeFromTree = (
-  tree: FormNode,
+  tree: TransactionNode,
   nodeIdToRemove: string
-): FormNode => {
+): TransactionNode => {
   const childToRemove = tree.children?.find(
     (child) => child.id === nodeIdToRemove
   );
@@ -127,14 +110,16 @@ export default function EncodePage() {
   const { uuid } = useParams<{ uuid: string }>();
   const router = useRouter();
 
-  const [selected, setSelected] = React.useState<FormNode>();
-  const [formData, setFormData] = React.useState<FormNode>(root);
+  const [isEdited, setIsEdited] = React.useState<boolean>(false);
+  const [selected, setSelected] = React.useState<TransactionNode>();
+  const [formData, setFormData] = React.useState<TransactionNode>(root);
   const [loading, setLoading] = React.useState<boolean>(false);
   const [editMode, setEditMode] = React.useState(uuid ? false : true);
   const [errorMessage, setErrorMessage] = React.useState<string>();
   const [openErrorSnackbar, setOpenErrorSnackbar] = React.useState(false);
   const [deletePageDialogOpen, setDeletePageDialogOpen] = React.useState(false);
   const [deleteNodeDialogOpen, setDeleteNodeDialogOpen] = React.useState(false);
+  const [leavePageDialogOpen, setLeavePageDialogOpen] = React.useState(false);
 
   React.useEffect(() => {
     const fetchTransaction = async () => {
@@ -150,7 +135,7 @@ export default function EncodePage() {
 
         if (transactionSnap.exists()) {
           const results = transactionSnap.data();
-          const data: FormNode = {
+          const data: TransactionNode = {
             id: "root",
             name: results.title,
             type: "condition",
@@ -173,6 +158,7 @@ export default function EncodePage() {
         setOpenErrorSnackbar(true);
       } finally {
         setLoading(false);
+        setIsEdited(false);
       }
     };
 
@@ -187,7 +173,7 @@ export default function EncodePage() {
 
   // Node Methods
 
-  const handleSelectNode = (node: FormNode) => {
+  const handleSelectNode = (node: TransactionNode) => {
     setSelected(node);
     setEditMode(false);
 
@@ -199,7 +185,7 @@ export default function EncodePage() {
   const createConditionNode = () => {
     if (!selected) return;
 
-    const newNode: FormNode = {
+    const newNode: TransactionNode = {
       id: uuidv4(),
       name: "",
       type: "condition",
@@ -215,7 +201,7 @@ export default function EncodePage() {
   const createRequirementNode = () => {
     if (!selected) return;
 
-    const newNode: FormNode = {
+    const newNode: TransactionNode = {
       id: uuidv4(),
       name: "",
       type: "requirement",
@@ -223,10 +209,11 @@ export default function EncodePage() {
 
     setFormData((prev) => createNodeInTree(prev, selected.id, newNode));
     setSelected(newNode);
+    setIsEdited(true);
     setEditMode(true);
   };
 
-  const handleUpdateNode = (updatedNode: FormNode) => {
+  const handleUpdateNode = (updatedNode: TransactionNode) => {
     setSelected(updatedNode);
 
     if (updatedNode.id === "root") {
@@ -235,6 +222,7 @@ export default function EncodePage() {
       setFormData((prev) => updateNodeInTree(prev, updatedNode));
     }
 
+    setIsEdited(true);
     setEditMode(false);
   };
 
@@ -248,6 +236,7 @@ export default function EncodePage() {
     const updatedFormData = removeNodeFromTree(formData, selected.id);
 
     setFormData(updatedFormData);
+    setIsEdited(true);
     setDeleteNodeDialogOpen(false);
     setSelected(undefined);
   };
@@ -265,10 +254,6 @@ export default function EncodePage() {
     }
 
     setOpenErrorSnackbar(false);
-  };
-
-  const handleNavigateBack = () => {
-    router.push("/charter");
   };
 
   // Dialogs
@@ -291,12 +276,16 @@ export default function EncodePage() {
     setDeletePageDialogOpen(false);
   };
 
+  const handleCloseLeavePageDialog = () => {
+    setLeavePageDialogOpen(false);
+  };
+
   // Backend
 
   const handleSubmit = async () => {
     setLoading(true);
 
-    const clean: FormNode = JSON.parse(JSON.stringify(formData));
+    const clean: TransactionNode = JSON.parse(JSON.stringify(formData));
     const reference = uuid || uuidv4();
 
     try {
@@ -305,10 +294,12 @@ export default function EncodePage() {
         title: clean.name,
         fee: clean.fee,
         duration: clean.duration,
+        format: clean.format || "single-select",
         service: clean.service,
         category: clean.service === "REGISTRATION" ? clean.category : "",
         requirements: clean.children || [],
         updatedAt: Timestamp.now(),
+        publish: clean.publish || false,
       });
 
       if (!uuid) {
@@ -322,12 +313,13 @@ export default function EncodePage() {
       setOpenErrorSnackbar(true);
     } finally {
       setLoading(false);
+      setIsEdited(false);
     }
   };
 
   const handleDeletePage = async () => {
     if (!uuid) {
-      router.push("/charter");
+      router.push("/dashboard/charter");
       return;
     }
 
@@ -337,7 +329,7 @@ export default function EncodePage() {
       const docRef = doc(db, "charter", uuid);
       await deleteDoc(docRef);
 
-      router.push("/charter");
+      router.push("/dashboard/charter");
     } catch (error) {
       console.error("Error deleting transaction:", error);
       setErrorMessage(
@@ -347,6 +339,24 @@ export default function EncodePage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Navigations
+
+  const handleNavigateBack = () => {
+    router.push("/dashboard/charter");
+  };
+
+  const handleLeavePage = () => {
+    if (isEdited) {
+      setLeavePageDialogOpen(true);
+    } else {
+      router.push("/dashboard/charter");
+    }
+  };
+
+  const handlePreviewCharter = () => {
+    router.push("/dashboard/charter/" + uuid);
   };
 
   return (
@@ -373,7 +383,7 @@ export default function EncodePage() {
             >
               {uuid && (
                 <Tooltip title="Go Back">
-                  <IconButton onClick={handleNavigateBack}>
+                  <IconButton onClick={handleLeavePage}>
                     <ArrowBackIcon />
                   </IconButton>
                 </Tooltip>
@@ -400,11 +410,12 @@ export default function EncodePage() {
                 </IconButton>
               </Tooltip>
               <Tooltip title="Preview">
-                <IconButton>
+                <IconButton onClick={handlePreviewCharter}>
                   <OpenInNewIcon />
                 </IconButton>
               </Tooltip>
               <Button
+                disabled={!isEdited}
                 variant="outlined"
                 startIcon={<SaveIcon />}
                 onClick={handleSubmit}
@@ -478,29 +489,36 @@ export default function EncodePage() {
               )}
           </Grid>
 
-          {selected && deleteNodeDialogOpen && (
-            <DeleteDialog
-              open={deleteNodeDialogOpen}
-              message={`Are you sure you want to ${
-                selected ? `delete "${selected.name}"?` : "delete?"
-              } This action cannot be undone.`}
-              handleDelete={handleDeleteNode}
-              handleClose={handleCloseDeleteNodeDialog}
-            />
-          )}
+          <DeleteDialog
+            open={deleteNodeDialogOpen}
+            message={`Are you sure you want to ${
+              selected ? `delete "${selected.name}"?` : "delete?"
+            } This action cannot be undone.`}
+            handleDelete={handleDeleteNode}
+            handleClose={handleCloseDeleteNodeDialog}
+          />
 
-          {deletePageDialogOpen && (
-            <DeleteDialog
-              open={deletePageDialogOpen}
-              message={
-                uuid
-                  ? `Are you sure you want to delete "${formData.name}"?`
-                  : `Are you sure you want to discard changes?`
-              }
-              handleDelete={handleDeletePage}
-              handleClose={handleCloseDeletePageDialog}
-            />
-          )}
+          <DeleteDialog
+            open={deletePageDialogOpen}
+            message={
+              uuid
+                ? `Are you sure you want to delete "${formData.name}"?`
+                : `Are you sure you want to discard changes?`
+            }
+            handleDelete={handleDeletePage}
+            handleClose={handleCloseDeletePageDialog}
+            buttonLabel={uuid ? "Delete Page" : "Discard Changes"}
+          />
+
+          <DeleteDialog
+            open={leavePageDialogOpen}
+            message={
+              "You have unsaved changes. Are you sure you want to leave?"
+            }
+            handleDelete={handleNavigateBack}
+            handleClose={handleCloseLeavePageDialog}
+            buttonLabel="Leave Page"
+          />
 
           <Snackbar
             open={openErrorSnackbar}

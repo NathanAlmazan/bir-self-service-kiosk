@@ -25,6 +25,8 @@ import QueueTableToolbar from "./table-toolbar";
 import QueueTableRow from "./table-row";
 import QueueTableHead from "./table-head";
 import TableNoData from "./table-no-data";
+// Types
+import { TransactionsStatus } from "src/pages/requirements/types";
 
 const FilterDrawer = React.lazy(() => import("./filter-drawer"));
 
@@ -35,8 +37,7 @@ export type QueueRaw = {
   rdo: string;
   service: string;
   transaction: string;
-  complete: boolean;
-  verified: boolean;
+  status: TransactionsStatus;
   submittedAt: Timestamp;
 };
 
@@ -54,7 +55,6 @@ export default function QueuePage() {
   // ================ Filter Drawer =================
   const [filterOpen, setFilterOpen] = React.useState<boolean>(false);
   const [filter, setFilter] = React.useState<Record<string, string>>({
-    rdo: "ALL",
     service: "ALL",
     status: "ALL",
   });
@@ -77,40 +77,24 @@ export default function QueuePage() {
       try {
         setIsLoading(true);
 
-        // get week range
+        // get year range
         const now = new Date();
-        const dayOfWeek = now.getDay();
-
-        // calculate start of week (Sunday)
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - dayOfWeek);
-        startOfWeek.setHours(0, 0, 0, 0);
-
-        // calculate end of week (Saturday)
-        const endOfWeek = new Date(now);
-        endOfWeek.setDate(now.getDate() + (6 - dayOfWeek));
-        endOfWeek.setHours(23, 59, 59, 999);
+        // start of year
+        const startYear = new Date(now.getFullYear(), 0, 1);
+        // end of year
+        const endYear = new Date(now.getFullYear(), 11, 31);
 
         const queryBuilder = [
-          where("submittedAt", "<=", Timestamp.now()),
+          where("submittedAt", ">=", Timestamp.fromDate(startYear)),
+          where("submittedAt", "<", Timestamp.fromDate(endYear)),
         ];
-
-        if (filter.rdo !== "ALL") {
-          queryBuilder.push(where("rdo", "==", filter.rdo));
-        }
 
         if (filter.service !== "ALL") {
           queryBuilder.push(where("service", "==", filter.service));
         }
 
         if (filter.status !== "ALL") {
-          if (filter.status === "Started Transaction") {
-            queryBuilder.push(where("verified", "==", true));
-          } else if (filter.status === "Complete Requirements") {
-            queryBuilder.push(where("complete", "==", true));
-          } else if (filter.status === "Incomplete Requirements") {
-            queryBuilder.push(where("complete", "==", false));
-          }
+          queryBuilder.push(where("status", "==", filter.status));
         }
 
         const querySnapshot = await getDocs(
@@ -124,7 +108,7 @@ export default function QueuePage() {
             name: data.firstName + " " + data.lastName,
             rdo: data.rdo,
             transaction: data.service + " — " + data.transaction,
-            status: getStatus(data.complete, data.verified),
+            status: String(data.status).replace("_", " "),
             submittedAt: data.submittedAt.toDate(),
             search: `${data.firstName} ${data.lastName} ${data.rdo} ${data.service} ${data.transaction}`,
           };
@@ -276,13 +260,6 @@ export default function QueuePage() {
       )}
     </>
   );
-}
-
-function getStatus(completed: boolean, verified?: boolean) {
-  if (completed && verified) return "Started Transaction";
-  else if (completed && !verified) return "Complete Requirements";
-  else if (!completed && !verified) return "Incomplete Requirements";
-  return "Unknown Status";
 }
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {

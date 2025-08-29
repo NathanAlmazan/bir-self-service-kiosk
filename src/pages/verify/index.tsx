@@ -17,6 +17,8 @@ import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import { db } from "src/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { useRouter } from "src/routes/hooks";
+// Types
+import { TransactionsStatus } from "src/pages/requirements/types";
 
 export default function VerificationPage() {
   const { uuid } = useParams();
@@ -36,15 +38,15 @@ export default function VerificationPage() {
       setLoading(true);
 
       try {
-        // update the taxpayer document with the rating
+        // update the taxpayer document with the verification
         const taxpayerDocRef = doc(db, "taxpayers", uuid);
         await updateDoc(taxpayerDocRef, {
-          verified: true,
+          status: TransactionsStatus.RECEIVED_REQUIREMENTS,
         });
 
         setLoading(false);
       } catch (error) {
-        console.error("Error submitting rating:", error);
+        console.error("Error submitting verification:", error);
         setErrorMessage("Failed to verify transaction. Please try again.");
         setLoading(false);
       }
@@ -54,7 +56,7 @@ export default function VerificationPage() {
   }, [uuid]);
 
   const handleNavigateBack = () => {
-    router.push("/queue");
+    router.push("/dashboard/home");
   };
 
   return (

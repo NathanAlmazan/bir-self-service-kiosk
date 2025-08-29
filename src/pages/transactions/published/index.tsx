@@ -10,6 +10,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
+import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import { capitalize } from "es-toolkit";
@@ -24,23 +25,8 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 // Components
 import TransactionCard from "./card";
 import Fallback from "src/components/fallback";
-
-export type Service =
-  | "CERTIFICATE & CLEARANCE"
-  | "COMPLIANCE & ENFORCEMENT"
-  | "FILING & PAYMENT"
-  | "REGISTRATION"
-  | "AUDIT & INVESTIGATION";
-
-export type Transaction = {
-  id: string;
-  name: string;
-  fee: string;
-  duration: string;
-  service: string;
-  category?: string;
-  checklist?: string;
-};
+// Types
+import type { Transaction } from "src/pages/requirements/types";
 
 const formatServiceName = (service: string | undefined) => {
   return service
@@ -55,7 +41,7 @@ export default function PublishedTransactionsPage() {
   const { service } = useParams();
   // Navigation
   const router = useRouter();
-  const handleNavigateBack = () => router.push("/services");
+  const handleNavigateBack = () => router.push("/kiosk/services");
   // Tabs
   const [tabValue, setTabValue] = React.useState<number>(0);
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -75,13 +61,13 @@ export default function PublishedTransactionsPage() {
 
         const querySnapshot = await getDocs(
           query(
-            collection(db, "transactions"),
+            collection(db, "charter"),
             where(
               "service",
               "==",
               service?.split("-").join(" & ").toUpperCase() || ""
             ),
-            where("published", "==", true)
+            where("publish", "==", true)
           )
         );
 
@@ -94,7 +80,7 @@ export default function PublishedTransactionsPage() {
               .filter((t) => t.category)
               .map((t) => t.category || "")
           )
-        ).reverse();
+        ).sort((a, b) => a.length - b.length);
 
         setCategories(uniqueCategories);
         setTransactions(serviceTransactions);
@@ -117,7 +103,7 @@ export default function PublishedTransactionsPage() {
         transactions.filter(
           (t) =>
             (categories.length === 0 || t.category === categories[tabValue]) &&
-            t.name.toLowerCase().includes(searchQuery.toLowerCase())
+            t.title.toLowerCase().includes(searchQuery.toLowerCase())
         )
       );
 
@@ -133,7 +119,7 @@ export default function PublishedTransactionsPage() {
     _: React.MouseEvent<HTMLButtonElement>,
     transaction: string
   ) => {
-    router.push(`/requirements/${transaction}`);
+    router.push(`/kiosk/requirements/${transaction}`);
   };
 
   return (
@@ -180,16 +166,19 @@ export default function PublishedTransactionsPage() {
             {/* Transaction Categories */}
             {categories.length > 1 && (
               <Grid size={12}>
+                <Box sx={{ width: '100%', bgcolor: 'background.paper', borderRadius: 2, px: 2 }}>
                 <Tabs
                   value={tabValue}
                   onChange={handleTabChange}
                   variant="scrollable"
                   scrollButtons="auto"
+                  textColor="primary"
                 >
                   {categories.map((category) => (
                     <Tab key={category} label={category} />
                   ))}
                 </Tabs>
+                </Box>
               </Grid>
             )}
             {/* Transaction Cards */}
@@ -216,7 +205,7 @@ export default function PublishedTransactionsPage() {
                       >
                         <TransactionCard
                           id={transaction.id}
-                          title={transaction.name}
+                          title={transaction.title}
                           duration={transaction.duration}
                           fee={transaction.fee}
                           handleClick={handleSelectTransaction}

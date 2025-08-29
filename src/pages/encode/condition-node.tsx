@@ -12,7 +12,7 @@ import Typography from "@mui/material/Typography";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 
-import type { FormNode } from ".";
+import type { TransactionNode } from "src/pages/requirements/types";
 import TreeNode from "./tree-node";
 
 const Accordion = styled((props: AccordionProps) => (
@@ -62,11 +62,11 @@ export default function ConditionNode({
   selected,
   handleSelect,
 }: {
-  data: FormNode;
+  data: TransactionNode;
   selected: string;
-  handleSelect: (node: FormNode) => void;
+  handleSelect: (node: TransactionNode) => void;
 }) {
-  const [expand, setExpand] = React.useState(true);
+  const [expand, setExpand] = React.useState(data.id === "root" ? true : false);
 
   const handleToggleExpand = () => {
     if (selected === data.id) {

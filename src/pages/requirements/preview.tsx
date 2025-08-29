@@ -8,7 +8,7 @@ import QRCode from "react-qr-code";
 
 import { useTheme } from "@mui/material/styles";
 
-import type { Transaction, Taxpayer } from ".";
+import type { Transaction, Taxpayer } from "./types";
 
 type PreviewProps = {
   transaction: Transaction;

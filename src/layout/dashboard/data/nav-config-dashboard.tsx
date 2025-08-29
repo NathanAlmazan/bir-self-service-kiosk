@@ -16,12 +16,12 @@ export type NavItem = {
 export const navData = [
   {
     title: 'Dashboard',
-    path: '/dashboard',
+    path: '/dashboard/home',
     icon: <CandlestickChartOutlinedIcon />,
   },
   {
     title: 'Queue',
-    path: '/queue',
+    path: '/dashboard/queue',
     icon: <HorizontalSplitOutlinedIcon />,
     info: (
       <Label color="info" variant="inverted">
@@ -31,7 +31,7 @@ export const navData = [
   },
   {
     title: 'Charter',
-    path: '/charter',
+    path: '/dashboard/charter',
     icon: <ClassOutlinedIcon />,
   },
 ];

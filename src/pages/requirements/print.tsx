@@ -11,7 +11,7 @@ import { db, storage } from "src/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-import type { Requirements, Transaction, Taxpayer } from ".";
+import type { Requirements, Transaction, Taxpayer } from "./types";
 
 import ReceiptPreview from "./preview";
 

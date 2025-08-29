@@ -20,25 +20,10 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 // Components
 import TransactionCard from "./card";
 import Fallback from "src/components/fallback";
+// Types
+import type { ServiceType, Transaction } from "src/pages/requirements/types";
 
-export type Service =
-  | "CERTIFICATE & CLEARANCE"
-  | "COMPLIANCE & ENFORCEMENT"
-  | "FILING & PAYMENT"
-  | "REGISTRATION"
-  | "AUDIT & INVESTIGATION";
-
-export type Transaction = {
-  id: string;
-  name: string;
-  fee: string;
-  duration: string;
-  service: string;
-  category?: string;
-  checklist?: string;
-};
-
-const services: Service[] = [
+const services: ServiceType[] = [
   "REGISTRATION",
   "FILING & PAYMENT",
   "CERTIFICATE & CLEARANCE",
@@ -68,7 +53,7 @@ export default function DraftTransactionsPage() {
         const serviceTransactions: Transaction[] = querySnapshot.docs.map(
           (doc) => ({
             id: doc.id,
-            name: doc.data().title,
+            title: doc.data().title,
             duration: doc.data().duration,
             fee: doc.data().fee,
             service: doc.data().service,
@@ -96,7 +81,7 @@ export default function DraftTransactionsPage() {
         transactions.filter(
           (t) =>
             t.service === services[tabValue] &&
-            t.name.toLowerCase().includes(searchQuery.toLowerCase())
+            t.title.toLowerCase().includes(searchQuery.toLowerCase())
         )
       );
 
@@ -113,9 +98,9 @@ export default function DraftTransactionsPage() {
     transaction?: string
   ) => {
     if (transaction) {
-      router.push(`/encode/${transaction}`);
+      router.push(`/dashboard/encode/${transaction}`);
     } else {
-      router.push(`/encode`);
+      router.push(`/dashboard/encode`);
     }
   };
 
@@ -189,7 +174,7 @@ export default function DraftTransactionsPage() {
                   <Grid key={transaction.id} size={{ sm: 12, md: 6, lg: 4 }}>
                     <TransactionCard
                       id={transaction.id}
-                      title={transaction.name}
+                      title={transaction.title}
                       duration={transaction.duration}
                       fee={transaction.fee}
                       category={transaction.category}

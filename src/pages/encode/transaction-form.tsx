@@ -7,14 +7,27 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 import InputAdornment from "@mui/material/InputAdornment";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Checkbox from "@mui/material/Checkbox";
 
-import type { FormNode } from ".";
+import type { TransactionNode } from "src/pages/requirements/types";
 
 interface TransactionFormProps {
-  node: FormNode;
+  node: TransactionNode;
   onCancel: () => void;
-  onUpdate: (updatedNode: FormNode) => void;
+  onUpdate: (updatedNode: TransactionNode) => void;
   editMode: boolean;
+}
+
+interface FormDataTypes {
+  name: string;
+  fee: string;
+  feeNotes: string;
+  duration: string;
+  service: string;
+  category: string;
+  format: "single-select" | "multi-select";
+  publish: boolean;
 }
 
 export default function TransactionForm({
@@ -23,13 +36,15 @@ export default function TransactionForm({
   onUpdate,
   editMode,
 }: TransactionFormProps) {
-  const [formValues, setFormValues] = React.useState({
+  const [formValues, setFormValues] = React.useState<FormDataTypes>({
     name: "",
     fee: "",
     feeNotes: "",
     duration: "",
     service: "",
     category: "",
+    format: "single-select",
+    publish: false,
   });
 
   React.useEffect(() => {
@@ -44,19 +59,18 @@ export default function TransactionForm({
       duration: node.duration || "",
       service: node.service || "REGISTRATION",
       category: node.category || "",
+      format: node.format || "single-select",
+      publish: node.publish || false,
     });
   }, [node]);
 
-  React.useEffect(() => {
-    if (formValues.service !== "REGISTRATION") {
-      setFormValues((prev) => ({ ...prev, category: "" }));
-    }
-  }, [formValues.service]);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value =
+      e.target.type === "checkbox" ? e.target.checked : e.target.value;
+
     setFormValues({
       ...formValues,
-      [e.target.name]: e.target.value,
+      [e.target.name]: value,
     });
   };
 
@@ -76,6 +90,8 @@ export default function TransactionForm({
       duration: formValues.duration,
       service: formValues.service,
       category: formValues.category,
+      format: formValues.format,
+      publish: formValues.publish
     });
   };
 
@@ -91,6 +107,8 @@ export default function TransactionForm({
       duration: node.duration || "",
       service: node.service || "REGISTRATION",
       category: node.category || "",
+      format: node.format || "single-select",
+      publish: node.publish || false,
     });
 
     onCancel();
@@ -207,6 +225,35 @@ export default function TransactionForm({
             Closure of Business or Cancellation of Registration
           </MenuItem>
         </TextField>
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <TextField
+          required
+          label="Selection Type"
+          name="format"
+          variant="outlined"
+          fullWidth
+          value={formValues.format}
+          onChange={handleChange}
+          disabled={!editMode}
+          select
+        >
+          <MenuItem value="single-select">Single-Select</MenuItem>
+          <MenuItem value="multi-select">Multi-Select</MenuItem>
+        </TextField>
+      </Grid>
+      <Grid size={12}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              name="publish"
+              checked={formValues.publish}
+              onChange={handleChange}
+              disabled={!editMode}
+            />
+          }
+          label="Publish Transaction to Kiosk?"
+        />
       </Grid>
       {editMode && (
         <Grid size={12}>

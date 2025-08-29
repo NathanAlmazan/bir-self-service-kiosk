@@ -1,10 +1,12 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Outlet, RouterProvider, createBrowserRouter } from 'react-router';
+import { Provider } from 'react-redux';
 
 import App from 'src/app';
 import routes from 'src/routes';
 import { ErrorBoundary } from 'src/routes/components';
+import { store } from 'src/store';
 
 // ----------------------------------------------------------------------
 
@@ -24,6 +26,8 @@ const root = createRoot(document.getElementById('root')!);
 
 root.render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <Provider store={store}>
+      <RouterProvider router={router} />
+    </Provider>
   </StrictMode>
 );

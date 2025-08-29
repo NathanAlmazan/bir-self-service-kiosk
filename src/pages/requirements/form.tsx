@@ -14,7 +14,7 @@ import Divider from "@mui/material/Divider";
 
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
 
-import type { Taxpayer } from ".";
+import type { Taxpayer } from "./types";
 
 type FormProps = {
   taxpayerData: Taxpayer;

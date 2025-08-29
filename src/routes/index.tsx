@@ -5,6 +5,7 @@ import type { RouteObject } from "react-router";
 import KioskLayout from "src/layout/kiosk";
 import DashboardLayout from "src/layout/dashboard";
 import Fallback from "src/components/fallback";
+import AuthProvider from "src/pages/auth/AuthProvider";
 
 // Pages
 const ServicesPage = lazy(() => import("src/pages/services"));
@@ -19,8 +20,10 @@ const RequirementsPage = lazy(() => import("src/pages/requirements"));
 const VerificationPage = lazy(() => import("src/pages/verify"));
 const QueuePage = lazy(() => import("src/pages/queue"));
 const EncodePage = lazy(() => import("src/pages/encode"));
+const EncodePreviewPage = lazy(() => import("src/pages/encode/preview"));
 const NotFoundPage = lazy(() => import("src/pages/not-found"));
 const InternalErrorPage = lazy(() => import("src/pages/internal-error"));
+const SignInPage = lazy(() => import("src/pages/auth"));
 
 const routes: RouteObject[] = [
   {
@@ -32,27 +35,64 @@ const routes: RouteObject[] = [
       </KioskLayout>
     ),
     children: [
-      { path: "services", element: <ServicesPage /> },
-      { path: "transactions/:service", element: <PublishedTransactionsPage /> },
-      { path: "requirements/:uuid", element: <RequirementsPage /> },
+      {
+        path: "kiosk/services",
+        element: <ServicesPage />,
+      },
+      {
+        path: "kiosk/transactions/:service",
+        element: <PublishedTransactionsPage />,
+      },
+      {
+        path: "kiosk/requirements/:uuid",
+        element: <RequirementsPage />,
+      },
+      {
+        path: "kiosk/verify/:uuid",
+        element: <VerificationPage />,
+      },
     ],
   },
   {
     element: (
-      <DashboardLayout>
-        <Suspense fallback={<Fallback />}>
-          <Outlet />
-        </Suspense>
-      </DashboardLayout>
+      <AuthProvider>
+        <DashboardLayout>
+          <Suspense fallback={<Fallback />}>
+            <Outlet />
+          </Suspense>
+        </DashboardLayout>
+      </AuthProvider>
     ),
     children: [
-      { path: "dashboard", element: <DashboardPage /> },
-      { path: "charter", element: <DraftTransactionsPage /> },
-      { path: "encode", element: <EncodePage /> },
-      { path: "encode/:uuid", element: <EncodePage /> },
-      { path: "queue", element: <QueuePage /> },
-      { path: "verify/:uuid", element: <VerificationPage /> },
+      {
+        path: "dashboard/home",
+        element: <DashboardPage />,
+      },
+      {
+        path: "dashboard/charter",
+        element: <DraftTransactionsPage />,
+      },
+      {
+        path: "dashboard/charter/:uuid",
+        element: <EncodePreviewPage />,
+      },
+      {
+        path: "dashboard/encode",
+        element: <EncodePage />,
+      },
+      {
+        path: "dashboard/encode/:uuid",
+        element: <EncodePage />,
+      },
+      {
+        path: "dashboard/queue",
+        element: <QueuePage />,
+      },
     ],
+  },
+  {
+    path: "dashboard/signin",
+    element: <SignInPage />,
   },
   {
     path: "404",

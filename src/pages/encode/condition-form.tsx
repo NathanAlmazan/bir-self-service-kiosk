@@ -5,12 +5,12 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 
-import type { FormNode } from ".";
+import type { TransactionNode } from "src/pages/requirements/types";
 
 interface ConditionFormProps {
-  node: FormNode;
+  node: TransactionNode;
   onCancel: () => void;
-  onUpdate: (updatedNode: FormNode) => void;
+  onUpdate: (updatedNode: TransactionNode) => void;
   editMode: boolean;
 }
 

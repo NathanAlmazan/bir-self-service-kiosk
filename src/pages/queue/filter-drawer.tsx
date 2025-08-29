@@ -7,9 +7,12 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import FormControl from "@mui/material/FormControl";
 import FormLabel from "@mui/material/FormLabel";
 import IconButton from "@mui/material/IconButton";
+// Types
+import { TransactionsStatus } from "src/pages/requirements/types";
+// Icons
 import CloseIcon from "@mui/icons-material/Close";
 
-export type FilterFields = "rdo" | "service" | "status";
+export type FilterFields = "service" | "status";
 
 export type FilterDrawerProps = {
   open: boolean;
@@ -31,7 +34,7 @@ export default function FilterDrawer({
           display: "flex",
           flexDirection: "row",
           justifyContent: "flex-end",
-          p: 1
+          p: 1,
         }}
       >
         <IconButton onClick={onClose}>
@@ -72,72 +75,34 @@ export default function FilterDrawer({
           >
             <FormControlLabel value="ALL" control={<Radio />} label="All" />
             <FormControlLabel
-              value="Started Transaction"
-              control={<Radio />}
-              label="Started Transaction"
-            />
-            <FormControlLabel
-              value="Complete Requirements"
+              value={TransactionsStatus.COMPLETE_REQUIREMENTS}
               control={<Radio />}
               label="Complete Requirements"
             />
             <FormControlLabel
-              value="Incomplete Requirements"
+              value={TransactionsStatus.INCOMPLETE_REQUIREMENTS}
               control={<Radio />}
               label="Incomplete Requirements"
+            />
+            <FormControlLabel
+              value={TransactionsStatus.RECEIVED_REQUIREMENTS}
+              control={<Radio />}
+              label="Received"
+            />
+            <FormControlLabel
+              value={TransactionsStatus.VERIFIED_REQUIREMENTS}
+              control={<Radio />}
+              label="Verified"
+            />
+            <FormControlLabel
+              value={TransactionsStatus.INVALID_REQUIREMENTS}
+              control={<Radio />}
+              label="Invalid Requirements"
             />
           </RadioGroup>
         </FormControl>
         <Divider sx={{ my: 1 }} />
-        <FormControl>
-          <FormLabel>Revenue District</FormLabel>
-          <RadioGroup
-            value={filter.rdo}
-            onChange={(e) => setFilter("rdo", e.target.value)}
-          >
-            <FormControlLabel value="ALL" control={<Radio />} label="All" />
-            {offices.map((office) => (
-              <FormControlLabel
-                key={office.name}
-                value={office.name}
-                control={<Radio />}
-                label={office.name}
-              />
-            ))}
-          </RadioGroup>
-        </FormControl>
       </Box>
     </Drawer>
   );
 }
-
-const offices = [
-  {
-    name: "RDO No. 29",
-    area: "Tondo - San Nicolas",
-  },
-  {
-    name: "RDO No. 30",
-    area: "Binondo",
-  },
-  {
-    name: "RDO No. 31",
-    area: "Sta. Cruz",
-  },
-  {
-    name: "RDO No. 32",
-    area: "Quiapo-Sampaloc-San Miguel-Sta. Mesa",
-  },
-  {
-    name: "RDO No. 33",
-    area: "Ermita-Intramuros-Malate",
-  },
-  {
-    name: "RDO No. 34",
-    area: "Paco-Pandacan-Sta. Ana-San Andres",
-  },
-  {
-    name: "RDO No. 36",
-    area: "Puerto Princesa City, Palawan",
-  },
-];

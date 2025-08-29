@@ -16,7 +16,7 @@ export default function QueueTableRow({ row }: QueueTableRowProps) {
     <TableRow>
       <TableCell component="th" scope="row">
         <Typography variant="body2" fontWeight="bold">
-          {row.id.split("-").slice(-2).join("-")}
+          {row.id.split("-").slice(1).join("-")}
         </Typography>
       </TableCell>
 

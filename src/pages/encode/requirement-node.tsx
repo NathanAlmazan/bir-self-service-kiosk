@@ -3,16 +3,16 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemButton from "@mui/material/ListItemButton";
 // Icons
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
-import type { FormNode } from ".";
+import type { TransactionNode } from "src/pages/requirements/types";
 
 export default function RequirementNode({
   data,
   selected,
   handleSelect,
 }: {
-  data: FormNode;
+  data: TransactionNode;
   selected: string;
-  handleSelect: (node: FormNode) => void;
+  handleSelect: (node: TransactionNode) => void;
 }) {
   return (
     <ListItemButton

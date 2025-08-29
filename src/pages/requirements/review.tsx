@@ -46,7 +46,7 @@ export default function KioskReviewForm({
           }}
         >
           <img alt="very-bad" src="/emoji/very-bad.svg" />
-          <Typography variant="h6">Bad</Typography>
+          <Typography variant="h6" sx={{ pt: 2 }}>1</Typography>
         </IconButton>
         <IconButton
           onClick={() => handleSubmitRating(2)}
@@ -58,7 +58,7 @@ export default function KioskReviewForm({
           }}
         >
           <img alt="bad" src="/emoji/bad.svg" />
-          <Typography variant="h6">Okay</Typography>
+          <Typography variant="h6" sx={{ pt: 2 }}>2</Typography>
         </IconButton>
         <IconButton
           onClick={() => handleSubmitRating(3)}
@@ -70,7 +70,7 @@ export default function KioskReviewForm({
           }}
         >
           <img alt="satisfactory" src="/emoji/satisfactory.svg" />
-          <Typography variant="h6">Fair</Typography>
+          <Typography variant="h6" sx={{ pt: 2 }}>3</Typography>
         </IconButton>
         <IconButton
           onClick={() => handleSubmitRating(4)}
@@ -82,7 +82,7 @@ export default function KioskReviewForm({
           }}
         >
           <img alt="good" src="/emoji/good.svg" />
-          <Typography variant="h6">Nice</Typography>
+          <Typography variant="h6" sx={{ pt: 2 }}>4</Typography>
         </IconButton>
         <IconButton
           onClick={() => handleSubmitRating(5)}
@@ -94,7 +94,7 @@ export default function KioskReviewForm({
           }}
         >
           <img alt="very-good" src="/emoji/very-good.svg" />
-          <Typography variant="h6">Great</Typography>
+          <Typography variant="h6" sx={{ pt: 2 }}>5</Typography>
         </IconButton>
       </Box>
     </Stack>

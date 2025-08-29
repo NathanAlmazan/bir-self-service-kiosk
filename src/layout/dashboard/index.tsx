@@ -1,31 +1,39 @@
-import type { Breakpoint } from '@mui/material/styles';
+import type { Breakpoint } from "@mui/material/styles";
 
-import { merge } from 'es-toolkit';
-import { useBoolean } from 'minimal-shared/hooks';
+import { merge } from "es-toolkit";
+import { useBoolean } from "minimal-shared/hooks";
 
-import Box from '@mui/material/Box';
-import Alert from '@mui/material/Alert';
-import { useTheme } from '@mui/material/styles';
+import Box from "@mui/material/Box";
+import Alert from "@mui/material/Alert";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+import { useTheme } from "@mui/material/styles";
 
-import { NavMobile, NavDesktop } from './nav';
-import { layoutClasses } from '../core/classes';
-import { dashboardLayoutVars } from './css-vars';
-import { navData } from './data/nav-config-dashboard';
-import { MainSection } from '../core/main-section';
-import { Searchbar } from '../components/searchbar';
-import { workspaces } from './data/nav-config-workspace';
-import { MenuButton } from '../components/menu-button';
-import { HeaderSection } from '../core/header-section';
-import { LayoutSection } from '../core/layout-section';
-import { NotificationsPopover } from '../components/notifications-popover';
+import { NavMobile, NavDesktop } from "./nav";
+import { layoutClasses } from "../core/classes";
+import { dashboardLayoutVars } from "./css-vars";
+import { navData } from "./data/nav-config-dashboard";
+import { MainSection } from "../core/main-section";
+import { Searchbar } from "../components/searchbar";
+import { workspaces } from "./data/nav-config-workspace";
+import { MenuButton } from "../components/menu-button";
+import { HeaderSection } from "../core/header-section";
+import { LayoutSection } from "../core/layout-section";
+import { NotificationsPopover } from "../components/notifications-popover";
 
-import type { MainSectionProps } from '../core/main-section';
-import type { HeaderSectionProps } from '../core/header-section';
-import type { LayoutSectionProps } from '../core/layout-section';
+import { signOut } from "src/firebase";
+import { useAppDispatch } from "src/store/hooks";
+import { clearUser } from "src/store/slices/userSlice";
+
+import type { MainSectionProps } from "../core/main-section";
+import type { HeaderSectionProps } from "../core/header-section";
+import type { LayoutSectionProps } from "../core/layout-section";
+
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 
 // ----------------------------------------------------------------------
 
-type LayoutBaseProps = Pick<LayoutSectionProps, 'sx' | 'children' | 'cssVars'>;
+type LayoutBaseProps = Pick<LayoutSectionProps, "sx" | "children" | "cssVars">;
 
 export type DashboardLayoutProps = LayoutBaseProps & {
   layoutQuery?: Breakpoint;
@@ -40,22 +48,28 @@ export default function DashboardLayout({
   cssVars,
   children,
   slotProps,
-  layoutQuery = 'lg',
+  layoutQuery = "lg",
 }: DashboardLayoutProps) {
   const theme = useTheme();
+  const dispatch = useAppDispatch();
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
 
   const renderHeader = () => {
-    const headerSlotProps: HeaderSectionProps['slotProps'] = {
+    const renderSignOut = async () => {
+      await signOut();
+      dispatch(clearUser());
+    };
+
+    const headerSlotProps: HeaderSectionProps["slotProps"] = {
       container: {
         maxWidth: false,
       },
     };
 
-    const headerSlots: HeaderSectionProps['slots'] = {
+    const headerSlots: HeaderSectionProps["slots"] = {
       topArea: (
-        <Alert severity="info" sx={{ display: 'none', borderRadius: 0 }}>
+        <Alert severity="info" sx={{ display: "none", borderRadius: 0 }}>
           This is an info Alert.
         </Alert>
       ),
@@ -64,19 +78,39 @@ export default function DashboardLayout({
           {/** @slot Nav mobile */}
           <MenuButton
             onClick={onOpen}
-            sx={{ mr: 1, ml: -1, [theme.breakpoints.up(layoutQuery)]: { display: 'none' } }}
+            sx={{
+              mr: 1,
+              ml: -1,
+              [theme.breakpoints.up(layoutQuery)]: { display: "none" },
+            }}
           />
-          <NavMobile data={navData} open={open} onClose={onClose} workspaces={workspaces} />
+          <NavMobile
+            data={navData}
+            open={open}
+            onClose={onClose}
+            workspaces={workspaces}
+          />
         </>
       ),
       rightArea: (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.75 } }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: { xs: 0, sm: 0.75 },
+          }}
+        >
           {/** @slot Searchbar */}
           <Searchbar />
 
           {/** @slot Notifications popover */}
           <NotificationsPopover data={[]} />
 
+          <Tooltip title="Sign Out">
+            <IconButton onClick={renderSignOut}>
+              <LogoutRoundedIcon />
+            </IconButton>
+          </Tooltip>
         </Box>
       ),
     };
@@ -95,7 +129,9 @@ export default function DashboardLayout({
 
   const renderFooter = () => null;
 
-  const renderMain = () => <MainSection {...slotProps?.main}>{children}</MainSection>;
+  const renderMain = () => (
+    <MainSection {...slotProps?.main}>{children}</MainSection>
+  );
 
   return (
     <LayoutSection
@@ -107,7 +143,11 @@ export default function DashboardLayout({
        * @Sidebar
        *************************************** */
       sidebarSection={
-        <NavDesktop data={navData} layoutQuery={layoutQuery} workspaces={workspaces} />
+        <NavDesktop
+          data={navData}
+          layoutQuery={layoutQuery}
+          workspaces={workspaces}
+        />
       }
       /** **************************************
        * @Footer
@@ -121,10 +161,10 @@ export default function DashboardLayout({
         {
           [`& .${layoutClasses.sidebarContainer}`]: {
             [theme.breakpoints.up(layoutQuery)]: {
-              pl: 'var(--layout-nav-vertical-width)',
-              transition: theme.transitions.create(['padding-left'], {
-                easing: 'var(--layout-transition-easing)',
-                duration: 'var(--layout-transition-duration)',
+              pl: "var(--layout-nav-vertical-width)",
+              transition: theme.transitions.create(["padding-left"], {
+                easing: "var(--layout-transition-easing)",
+                duration: "var(--layout-transition-duration)",
               }),
             },
           },

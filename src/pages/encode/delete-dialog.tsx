@@ -10,11 +10,13 @@ export default function DeleteDialog({
   message,
   handleClose,
   handleDelete,
+  buttonLabel
 }: {
   open: boolean;
   message: string;
   handleClose: () => void;
   handleDelete: () => void;
+  buttonLabel?: string;
 }) {
   return (
     <Dialog
@@ -23,7 +25,7 @@ export default function DeleteDialog({
       aria-labelledby="delete-dialog-title"
       aria-describedby="delete-dialog-description"
     >
-      <DialogTitle id="delete-dialog-title">Confirm Deletion</DialogTitle>
+      <DialogTitle id="delete-dialog-title">Confirmation Required</DialogTitle>
       <DialogContent>
         <DialogContentText id="delete-dialog-description">
           {message}
@@ -34,7 +36,7 @@ export default function DeleteDialog({
           Cancel
         </Button>
         <Button onClick={handleDelete} color="error" autoFocus>
-          Delete
+          {buttonLabel || "Delete"}
         </Button>
       </DialogActions>
     </Dialog>

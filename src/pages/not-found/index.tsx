@@ -36,7 +36,7 @@ export default function NotFoundPage() {
 
         <Button
           component={RouterLink}
-          href="/services"
+          href="/kiosk/services"
           size="large"
           variant="contained"
           color="inherit"

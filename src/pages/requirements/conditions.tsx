@@ -12,35 +12,70 @@ import Divider from "@mui/material/Divider";
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
 
+import { TransactionNode } from "./types";
+
 type CategoriesProps = {
+  node: TransactionNode;
   selected: string[];
-  categories: string[];
   handleNextStep: () => void;
   handlePreviousStep: () => void;
-  toggleCategory: (category: string) => void;
+  toggleNodes: (id: string, queue: boolean) => void;
 };
 
 export default function RequirementsCategories({
+  node,
   selected,
-  categories,
-  toggleCategory,
+  toggleNodes,
   handleNextStep,
   handlePreviousStep,
 }: CategoriesProps) {
-  const [filteredCategories, setFilteredCategories] = React.useState<string[]>(
-    []
-  );
+  const [counter, setCounter] = React.useState<number>(0);
+  const [conditions, setConditions] = React.useState<
+    { id: string; label: string }[]
+  >([]);
 
   React.useEffect(() => {
-    setFilteredCategories([...selected, ...categories]);
-  }, [selected, categories]);
+    setCounter(0);
+    setConditions(
+      node.children
+        ?.filter((child) => child.type === "condition")
+        .map((child) => ({ id: child.id, label: child.name })) || []
+    );
+  }, [node]);
+
+  React.useEffect(() => {
+    if (
+      node.type === "condition" &&
+      node.format === "single-select" &&
+      counter === 1
+    ) {
+      setCounter(0);
+      handleNextStep();
+    }
+  }, [node, counter, handleNextStep]);
+
+  const handleToggle = (id: string) => {
+    const target: TransactionNode | undefined = node.children?.find(
+      (child) => child.id === id
+    );
+
+    if (target) {
+      const children: TransactionNode[] =
+        target.children?.filter((child) => child.type === "condition") || [];
+
+      const queue = Boolean(children.length > 0);
+
+      toggleNodes(id, queue);
+      setCounter((prev) => prev + 1);
+    }
+  };
 
   return (
     <Card>
       <CardContent>
         <Typography component="div" variant="h6" align="center">
           {`Please select what best describes your transaction. ${
-            filteredCategories.length > 1
+            conditions.length > 1
               ? "You may select more than one, if applicable."
               : ""
           }`}
@@ -56,17 +91,15 @@ export default function RequirementsCategories({
             mt: 3,
           }}
         >
-          {filteredCategories
-            .filter((category) => category !== "DEFAULT")
-            .map((category) => (
-              <Chip
-                key={category}
-                label={category}
-                clickable
-                color={selected.includes(category) ? "primary" : "default"}
-                onClick={() => toggleCategory(category)}
-              />
-            ))}
+          {conditions.map((cond) => (
+            <Chip
+              key={cond.id}
+              label={cond.label}
+              clickable
+              color={selected.includes(cond.id) ? "primary" : "default"}
+              onClick={() => handleToggle(cond.id)}
+            />
+          ))}
         </Box>
       </CardContent>
       <Divider />

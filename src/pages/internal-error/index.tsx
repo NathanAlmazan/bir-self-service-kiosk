@@ -40,7 +40,7 @@ export default function InternalErrorPage() {
 
         <Button
           component={RouterLink}
-          href="/queue"
+          href="/dashboard/home"
           size="large"
           variant="contained"
           color="inherit"

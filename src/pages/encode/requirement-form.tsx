@@ -8,12 +8,12 @@ import Button from "@mui/material/Button";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 
-import type { FormNode } from ".";
+import type { TransactionNode } from "src/pages/requirements/types";
 
 interface RequirementFormProps {
-  node: FormNode;
+  node: TransactionNode;
   onCancel: () => void;
-  onUpdate: (updatedNode: FormNode) => void;
+  onUpdate: (updatedNode: TransactionNode) => void;
   editMode: boolean;
 }
 

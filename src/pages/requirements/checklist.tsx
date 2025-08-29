@@ -20,7 +20,7 @@ import * as party from "party-js";
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
 
-import type { Requirements } from ".";
+import type { Requirements } from "./types";
 
 type ChecklistProps = {
   checked: string[];
