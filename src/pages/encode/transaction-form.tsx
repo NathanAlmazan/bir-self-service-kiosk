@@ -28,7 +28,18 @@ interface FormDataTypes {
   category: string;
   format: "single-select" | "multi-select";
   publish: boolean;
-}
+};
+
+const convertTransactionFee = (fee?: string): string[] => {
+  if (fee?.includes(" — ")) {
+    const amount = fee.split(" — ")[0].trim().replace("No Processing Fee", "0.00");
+    const notes = fee.split(" — ")[1].trim();
+
+    return [amount, notes];
+  } else {
+    return [fee || "", ""];
+  }
+};
 
 export default function TransactionForm({
   node,
@@ -48,14 +59,12 @@ export default function TransactionForm({
   });
 
   React.useEffect(() => {
+    const convertedFee = convertTransactionFee(node.fee);
+    
     setFormValues({
       name: node.name || "",
-      fee: node.fee?.includes(" — ")
-        ? node.fee.split(" — ")[0].trim()
-        : node.fee || "",
-      feeNotes: node.fee?.includes(" — ")
-        ? node.fee.split(" — ")[1].trim()
-        : "",
+      fee: convertedFee[0],
+      feeNotes: convertedFee[1],
       duration: node.duration || "",
       service: node.service || "REGISTRATION",
       category: node.category || "",
@@ -96,14 +105,12 @@ export default function TransactionForm({
   };
 
   const handleCancel = () => {
+    const convertedFee = convertTransactionFee(node.fee);
+    
     setFormValues({
       name: node.name || "",
-      fee: node.fee?.includes(" — ")
-        ? node.fee.split(" — ")[0].trim()
-        : node.fee || "",
-      feeNotes: node.fee?.includes(" — ")
-        ? node.fee.split(" — ")[1].trim()
-        : "",
+      fee: convertedFee[0],
+      feeNotes: convertedFee[1],
       duration: node.duration || "",
       service: node.service || "REGISTRATION",
       category: node.category || "",
