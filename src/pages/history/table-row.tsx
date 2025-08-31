@@ -3,6 +3,7 @@ import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import TableCell from "@mui/material/TableCell";
 
+import { TransactionsStatus } from "../requirements/types";
 import { Label, LabelColor } from "src/components/label";
 
 import type { Queue } from ".";
@@ -71,13 +72,17 @@ export default function QueueTableRow({ row }: QueueTableRowProps) {
   );
 }
 
-function getStatusColor(status: string): LabelColor {
+function getStatusColor(status: TransactionsStatus): LabelColor {
   switch (status) {
-    case "Started Transaction":
+    case TransactionsStatus.COMPLETE_REQUIREMENTS:
       return "primary";
-    case "Complete Requirements":
+    case TransactionsStatus.INCOMPLETE_REQUIREMENTS:
+      return "secondary";
+    case TransactionsStatus.RECEIVED_REQUIREMENTS:
+      return "warning";
+    case TransactionsStatus.VERIFIED_REQUIREMENTS:
       return "success";
-    case "Incomplete Requirements":
+    case TransactionsStatus.INVALID_REQUIREMENTS:
       return "error";
     default:
       return "default";

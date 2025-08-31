@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+
 import type { Breakpoint } from "@mui/material/styles";
 
 import { merge } from "es-toolkit";
@@ -12,19 +14,22 @@ import { useTheme } from "@mui/material/styles";
 import { NavMobile, NavDesktop } from "./nav";
 import { layoutClasses } from "../core/classes";
 import { dashboardLayoutVars } from "./css-vars";
-import { navData } from "./data/nav-config-dashboard";
 import { MainSection } from "../core/main-section";
-import { Searchbar } from "../components/searchbar";
-import { workspaces } from "./data/nav-config-workspace";
 import { MenuButton } from "../components/menu-button";
 import { HeaderSection } from "../core/header-section";
 import { LayoutSection } from "../core/layout-section";
 import { NotificationsPopover } from "../components/notifications-popover";
+import { Label } from "src/components/label";
 
 import { signOut } from "src/firebase";
-import { useAppDispatch } from "src/store/hooks";
+import { useAppDispatch, useAppSelector } from "src/store/hooks";
 import { clearUser } from "src/store/slices/userSlice";
 
+import ClassOutlinedIcon from "@mui/icons-material/ClassOutlined";
+import HorizontalSplitOutlinedIcon from "@mui/icons-material/HorizontalSplitOutlined";
+import CandlestickChartOutlinedIcon from "@mui/icons-material/CandlestickChartOutlined";
+
+import { UserRole } from "src/store/types";
 import type { MainSectionProps } from "../core/main-section";
 import type { HeaderSectionProps } from "../core/header-section";
 import type { LayoutSectionProps } from "../core/layout-section";
@@ -43,6 +48,14 @@ export type DashboardLayoutProps = LayoutBaseProps & {
   };
 };
 
+export type NavItem = {
+  title: string;
+  path: string;
+  icon: React.ReactNode;
+  info?: React.ReactNode;
+  roles: UserRole[];
+};
+
 export default function DashboardLayout({
   sx,
   cssVars,
@@ -52,8 +65,45 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   const theme = useTheme();
   const dispatch = useAppDispatch();
+  const { role } = useAppSelector((state) => state.user);
+
+  const [navigations, setNavigations] = useState<NavItem[]>([]);
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
+
+  useEffect(() => {
+    setNavigations([
+      {
+        title: "Dashboard",
+        path: "/dashboard/home",
+        icon: <CandlestickChartOutlinedIcon />,
+        roles: [UserRole.ADMIN, UserRole.OFFICER],
+      },
+      {
+        title: "Queue",
+        path: "/dashboard/queue",
+        icon: <HorizontalSplitOutlinedIcon />,
+        info: (
+          <Label color="info" variant="inverted">
+            {"+3 New"}
+          </Label>
+        ),
+        roles: [UserRole.OFFICER],
+      },
+      {
+        title: "History",
+        path: "/dashboard/history",
+        icon: <HorizontalSplitOutlinedIcon />,
+        roles: [UserRole.ADMIN, UserRole.OFFICER],
+      },
+      {
+        title: "Charter",
+        path: "/dashboard/charter",
+        icon: <ClassOutlinedIcon />,
+        roles: [UserRole.ADMIN],
+      },
+    ]);
+  }, []);
 
   const renderHeader = () => {
     const renderSignOut = async () => {
@@ -85,10 +135,11 @@ export default function DashboardLayout({
             }}
           />
           <NavMobile
-            data={navData}
+            data={navigations.filter(
+              (item) => role && item.roles.includes(role)
+            )}
             open={open}
             onClose={onClose}
-            workspaces={workspaces}
           />
         </>
       ),
@@ -100,9 +151,6 @@ export default function DashboardLayout({
             gap: { xs: 0, sm: 0.75 },
           }}
         >
-          {/** @slot Searchbar */}
-          <Searchbar />
-
           {/** @slot Notifications popover */}
           <NotificationsPopover data={[]} />
 
@@ -144,9 +192,8 @@ export default function DashboardLayout({
        *************************************** */
       sidebarSection={
         <NavDesktop
-          data={navData}
+          data={navigations.filter((item) => role && item.roles.includes(role))}
           layoutQuery={layoutQuery}
-          workspaces={workspaces}
         />
       }
       /** **************************************

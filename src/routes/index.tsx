@@ -18,8 +18,9 @@ const PublishedTransactionsPage = lazy(
 );
 const RequirementsPage = lazy(() => import("src/pages/requirements"));
 const VerificationPage = lazy(() => import("src/pages/verify"));
-const QueuePage = lazy(() => import("src/pages/queue"));
+const HistoryPage = lazy(() => import("src/pages/history"));
 const EncodePage = lazy(() => import("src/pages/encode"));
+const QueuePage = lazy(() => import("src/pages/queue"));
 const EncodePreviewPage = lazy(() => import("src/pages/encode/preview"));
 const NotFoundPage = lazy(() => import("src/pages/not-found"));
 const InternalErrorPage = lazy(() => import("src/pages/internal-error"));
@@ -84,9 +85,13 @@ const routes: RouteObject[] = [
         path: "dashboard/encode/:uuid",
         element: <EncodePage />,
       },
-      {
+       {
         path: "dashboard/queue",
         element: <QueuePage />,
+      },
+      {
+        path: "dashboard/history",
+        element: <HistoryPage />,
       },
     ],
   },

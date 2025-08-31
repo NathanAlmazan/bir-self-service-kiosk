@@ -216,18 +216,58 @@ export default function RequirementsPage() {
   // ====================== Requirements Categories State ======================
   const [requirements, setRequirements] = React.useState<Requirements[]>([]);
 
-  const handleToggleNodes = (id: string, queue: boolean) => {
+  React.useEffect(() => {
+    const reqs: Requirements[] = [];
+
+    for (const nodeId of selectedNodes) {
+      const node = findNodeById(nodeId, transactionNode);
+      if (node && node.type === "condition") {
+        reqs.push(
+          ...(node.children
+            ?.filter((child) => child.type === "requirement")
+            .map((req) => ({
+              id: req.id,
+              name: req.name,
+              note: req.note,
+              group: req.group,
+              optional: req.optional,
+              source: req.source,
+            })) || [])
+        );
+      }
+    }
+
+    setRequirements(reqs);
+  }, [selectedNodes, transactionNode]);
+
+  const handleToggleNodes = (id: string, queue: boolean, forward: boolean) => {
     // update selected node
     setSelectedNodes((prev) =>
       prev.includes(id) ? prev.filter((nodeId) => nodeId !== id) : [...prev, id]
     );
 
-    if (queue) {
-      setNodeQueue((prev) =>
-        prev.includes(id)
-          ? prev.filter((nodeId) => nodeId !== id)
-          : [...prev, id]
-      );
+    if (queue || forward) {
+      let tempQueue = nodeQueue;
+
+      if (queue) {
+        tempQueue = tempQueue.includes(id)
+          ? tempQueue.filter((nodeId) => nodeId !== id)
+          : [...tempQueue, id];
+      }
+
+      if (forward) {
+        tempQueue = tempQueue.slice(1);
+
+        if (tempQueue.length > 0) {
+          const nextNode = findNodeById(tempQueue[0], transactionNode);
+          setCurrentNode(nextNode || root);
+        } else {
+          setCurrentNode(transactionNode);
+          setActiveStep((step) => step + 1);
+        }
+      }
+
+      setNodeQueue(tempQueue);
     }
   };
 
@@ -240,27 +280,6 @@ export default function RequirementsPage() {
       const nextNode = findNodeById(queue[0], transactionNode);
       setCurrentNode(nextNode || root);
     } else {
-      const reqs: Requirements[] = [];
-
-      for (const nodeId of selectedNodes) {
-        const node = findNodeById(nodeId, transactionNode);
-        if (node && node.type === "condition") {
-          reqs.push(
-            ...(node.children
-              ?.filter((child) => child.type === "requirement")
-              .map((req) => ({
-                id: req.id,
-                name: req.name,
-                note: req.note,
-                group: req.group,
-                optional: req.optional,
-                source: req.source,
-              })) || [])
-          );
-        }
-      }
-
-      setRequirements(reqs);
       setCurrentNode(transactionNode);
       setActiveStep((step) => step + 1);
     }
@@ -281,6 +300,20 @@ export default function RequirementsPage() {
     ) {
       setSteps(["Select Category", ...baseSteps]);
     } else {
+      const reqs: Requirements[] =
+        transactionNode.children
+          ?.filter((child) => child.type === "requirement")
+          .map((req) => ({
+            id: req.id,
+            name: req.name,
+            note: req.note,
+            group: req.group,
+            optional: req.optional,
+            source: req.source,
+          })) || [];
+
+      setRequirements(reqs);
+      setCurrentNode(transactionNode);
       setSteps(baseSteps);
     }
   }, [transactionNode]);
@@ -412,21 +445,18 @@ export default function RequirementsPage() {
         taxpayerName: taxpayerData.taxpayerName,
         taxpayerTIN: taxpayerData.taxpayerTIN,
         service: transaction.service.toUpperCase(),
+        category: transaction.category?.toUpperCase(),
         status: completeRequirements
           ? TransactionsStatus.COMPLETE_REQUIREMENTS
           : TransactionsStatus.INCOMPLETE_REQUIREMENTS,
         submittedAt: Timestamp.fromDate(submittedAt),
         transaction: transaction.title,
-        checked: checkedRequirements.map((id) =>
-          doc(db, "transactions", transaction.id, "requirements", id)
-        ),
+        checked: requirements.filter((req) => checkedRequirements.includes(req.id)).map((req) => req.name),
         // only include missing requirements if not complete
         ...(completeRequirements
           ? {}
           : {
-              missing: missingRequirements.map((req) =>
-                doc(db, "transactions", transaction.id, "requirements", req.id)
-              ),
+              missing: missingRequirements.map((req) => req.name),
             }),
       };
 
@@ -563,6 +593,7 @@ export default function RequirementsPage() {
                         toggleNodes={handleToggleNodes}
                         handlePreviousStep={handlePreviousStep}
                         handleNextStep={handleQueueForward}
+                        disabled={requirements.length === 0}
                       />
                     </motion.div>
                   )}

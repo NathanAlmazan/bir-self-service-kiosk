@@ -17,42 +17,31 @@ import { TransactionNode } from "./types";
 type CategoriesProps = {
   node: TransactionNode;
   selected: string[];
+  disabled: boolean;
   handleNextStep: () => void;
   handlePreviousStep: () => void;
-  toggleNodes: (id: string, queue: boolean) => void;
+  toggleNodes: (id: string, queue: boolean, forward: boolean) => void;
 };
 
 export default function RequirementsCategories({
   node,
   selected,
+  disabled,
   toggleNodes,
   handleNextStep,
   handlePreviousStep,
 }: CategoriesProps) {
-  const [counter, setCounter] = React.useState<number>(0);
   const [conditions, setConditions] = React.useState<
     { id: string; label: string }[]
   >([]);
 
   React.useEffect(() => {
-    setCounter(0);
     setConditions(
       node.children
         ?.filter((child) => child.type === "condition")
         .map((child) => ({ id: child.id, label: child.name })) || []
     );
   }, [node]);
-
-  React.useEffect(() => {
-    if (
-      node.type === "condition" &&
-      node.format === "single-select" &&
-      counter === 1
-    ) {
-      setCounter(0);
-      handleNextStep();
-    }
-  }, [node, counter, handleNextStep]);
 
   const handleToggle = (id: string) => {
     const target: TransactionNode | undefined = node.children?.find(
@@ -65,8 +54,11 @@ export default function RequirementsCategories({
 
       const queue = Boolean(children.length > 0);
 
-      toggleNodes(id, queue);
-      setCounter((prev) => prev + 1);
+      toggleNodes(
+        id,
+        queue,
+        target.format === "single-select" || conditions.length === 1
+      );
     }
   };
 
@@ -123,7 +115,7 @@ export default function RequirementsCategories({
           size="large"
           variant="contained"
           onClick={handleNextStep}
-          disabled={selected.length === 0}
+          disabled={disabled}
           endIcon={<ArrowForwardIosOutlinedIcon />}
         >
           Continue

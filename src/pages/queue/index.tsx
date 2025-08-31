@@ -1,315 +1,373 @@
 import * as React from "react";
-// MUI
-import Box from "@mui/material/Box";
+
+import Grid from "@mui/material/Grid";
 import Container from "@mui/material/Container";
-import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
 import Card from "@mui/material/Card";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableContainer from "@mui/material/TableContainer";
-import TablePagination from "@mui/material/TablePagination";
-// Firebase
+import CardContent from "@mui/material/CardContent";
+import CardActions from "@mui/material/CardActions";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import Button from "@mui/material/Button";
+
 import { db } from "src/firebase";
+import { useAppSelector } from "src/store/hooks";
 import {
-  getDocs,
+  onSnapshot,
   collection,
   query,
   where,
+  orderBy,
   Timestamp,
+  doc,
+  updateDoc,
+  getDoc,
 } from "firebase/firestore";
-// Components
-import { useRouter } from "src/routes/hooks";
-import { Scrollbar } from "src/components/scrollbar";
-import Fallback from "src/components/fallback";
-import QueueTableToolbar from "./table-toolbar";
-import QueueTableRow from "./table-row";
-import QueueTableHead from "./table-head";
-import TableNoData from "./table-no-data";
-// Types
+
+import ConfirmDialog from "./confirm-dialog";
+import { Label, LabelColor } from "src/components/label";
 import { TransactionsStatus } from "src/pages/requirements/types";
 
-const FilterDrawer = React.lazy(() => import("./filter-drawer"));
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
+import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 
-export type QueueRaw = {
+export type QueueData = {
   id: string;
+  transaction: string;
   firstName: string;
   lastName: string;
+  rating: number;
   rdo: string;
   service: string;
-  transaction: string;
   status: TransactionsStatus;
+  taxpayerTIN: string;
+  contact: string;
+  category?: string;
   submittedAt: Timestamp;
-};
-
-export type Queue = {
-  id: string;
-  name: string;
-  rdo: string;
-  transaction: string;
-  status: string;
-  submittedAt: Date;
-  search: string;
+  checked?: string[];
 };
 
 export default function QueuePage() {
-  // ================ Filter Drawer =================
-  const [filterOpen, setFilterOpen] = React.useState<boolean>(false);
-  const [filter, setFilter] = React.useState<Record<string, string>>({
-    service: "ALL",
-    status: "ALL",
-  });
+  const { office } = useAppSelector((state) => state.user);
 
-  const handleToggleFilter = () => {
-    setFilterOpen((prev) => !prev);
-  };
-
-  const handleFilterChange = (field: string, value: string) => {
-    setFilter((prev) => ({ ...prev, [field]: value }));
-  };
-
-  // =============== Fetch Queue Data =================
-  const router = useRouter();
-  const [isLoading, setIsLoading] = React.useState<boolean>(true);
-  const [rawQueue, setRawQueue] = React.useState<Queue[]>([]);
+  const [queue, setQueue] = React.useState<QueueData[]>([]);
+  const [loading, setLoading] = React.useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = React.useState(false);
+  const [selected, setSelected] = React.useState<QueueData | null>(null);
+  const [scan, setScan] = React.useState(false);
 
   React.useEffect(() => {
-    const fetchQueue = async () => {
-      try {
-        setIsLoading(true);
-
-        // get year range
-        const now = new Date();
-        // start of year
-        const startYear = new Date(now.getFullYear(), 0, 1);
-        // end of year
-        const endYear = new Date(now.getFullYear(), 11, 31);
-
-        const queryBuilder = [
-          where("submittedAt", ">=", Timestamp.fromDate(startYear)),
-          where("submittedAt", "<", Timestamp.fromDate(endYear)),
-        ];
-
-        if (filter.service !== "ALL") {
-          queryBuilder.push(where("service", "==", filter.service));
-        }
-
-        if (filter.status !== "ALL") {
-          queryBuilder.push(where("status", "==", filter.status));
-        }
-
-        const querySnapshot = await getDocs(
-          query(collection(db, "taxpayers"), ...queryBuilder)
+    const unsubscribe = onSnapshot(
+      query(
+        collection(db, "taxpayers"),
+        where("rdo", "==", office),
+        where("status", "==", TransactionsStatus.COMPLETE_REQUIREMENTS),
+        orderBy("submittedAt", "asc")
+      ),
+      (snapshot) => {
+        setQueue(
+          snapshot.docs.map((doc) => {
+            const data = doc.data() as QueueData;
+            return {
+              id: doc.id,
+              transaction: data.transaction,
+              firstName: data.firstName,
+              lastName: data.lastName,
+              rating: data.rating,
+              rdo: data.rdo,
+              service: data.service,
+              status: data.status,
+              taxpayerTIN: data.taxpayerTIN,
+              contact: data.contact,
+              submittedAt: data.submittedAt,
+              checked: data.checked || [],
+              category: data.category,
+            };
+          })
         );
+      }
+    );
 
-        const queueData: Queue[] = querySnapshot.docs.map((doc) => {
-          const data = doc.data() as QueueRaw;
-          return {
-            id: doc.id,
-            name: data.firstName + " " + data.lastName,
-            rdo: data.rdo,
-            transaction: data.service + " — " + data.transaction,
-            status: String(data.status).replace("_", " "),
-            submittedAt: data.submittedAt.toDate(),
-            search: `${data.firstName} ${data.lastName} ${data.rdo} ${data.service} ${data.transaction}`,
-          };
-        });
+    return () => unsubscribe();
+  }, [office]);
 
-        setRawQueue(queueData);
-      } catch (error) {
-        console.error("Error fetching transaction:", error);
-        router.push("/500");
-      } finally {
-        setIsLoading(false);
+  React.useEffect(() => {
+    const fetchQueueTask = async () => {
+      const storedId = window.localStorage.getItem("servicing");
+      if (storedId) {
+        setLoading(true);
+        try {
+          const taxpayerDocRef = doc(db, "taxpayers", storedId);
+          const docSnap = await getDoc(taxpayerDocRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data() as QueueData;
+            setSelected({
+              id: docSnap.id,
+              transaction: data.transaction,
+              firstName: data.firstName,
+              lastName: data.lastName,
+              rating: data.rating,
+              rdo: data.rdo,
+              service: data.service,
+              status: data.status,
+              taxpayerTIN: data.taxpayerTIN,
+              contact: data.contact,
+              submittedAt: data.submittedAt,
+              checked: data.checked || [],
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching queue task:", error);
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
-    fetchQueue();
-  }, [router, filter]);
+    fetchQueueTask();
+  }, []);
 
-  // ==================== Table Pagination ====================
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
-
-  const handleChangePage = (_: unknown, newPage: number) => {
-    setPage(newPage);
+  const handleToggleScan = () => {
+    setScan((prev) => !prev);
   };
 
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+  const handleRejectTransaction = () => {
+    setConfirmDialogOpen(true);
   };
 
-  // =============== Sorting and Filtering =================
-  const [filterQuery, setFilterQuery] = React.useState("");
-  const [filteredQueue, setFilteredQueue] = React.useState<Queue[]>([]);
-  const [order, setOrder] = React.useState<"asc" | "desc">("desc");
-  const [orderBy, setOrderBy] = React.useState<keyof Queue>("id");
+  const handleConfirmDialogClose = () => {
+    setConfirmDialogOpen(false);
+  };
 
-  React.useEffect(() => {
-    setIsLoading(true);
-
-    const filtered = applyFilter({
-      inputData: rawQueue,
-      filterQuery,
-      orderBy,
-      order,
-    });
-
-    setFilteredQueue(filtered);
-    setIsLoading(false);
-    setPage(0);
-  }, [rawQueue, filterQuery, orderBy, order]);
-
-  const handleSort = React.useCallback(
-    (id: keyof Queue, disable: boolean) => {
-      if (!disable) {
-        const isAsc = orderBy === id && order === "asc";
-        setOrder(isAsc ? "desc" : "asc");
-        setOrderBy(id);
+  const handleStartTransaction = async () => {
+    if (selected) {
+      setLoading(true);
+      try {
+        // update the taxpayer document with the verification
+        const taxpayerDocRef = doc(db, "taxpayers", selected.id);
+        await updateDoc(taxpayerDocRef, {
+          status: TransactionsStatus.VERIFIED_REQUIREMENTS,
+        });
+      } catch (error) {
+        console.error("Error submitting status:", error);
+      } finally {
+        setLoading(false);
+        setSelected(null);
+        window.localStorage.removeItem("servicing");
       }
-    },
-    [order, orderBy]
-  );
+    }
+  };
 
-  const handleFilterQueryChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFilterQuery(event.target.value);
+  const handleConfirmReject = async () => {
+    if (selected) {
+      setLoading(true);
+      try {
+        // update the taxpayer document with the verification
+        const taxpayerDocRef = doc(db, "taxpayers", selected.id);
+        await updateDoc(taxpayerDocRef, {
+          status: TransactionsStatus.INVALID_REQUIREMENTS,
+        });
+      } catch (error) {
+        console.error("Error submitting status:", error);
+      } finally {
+        setLoading(false);
+        setSelected(null);
+        window.localStorage.removeItem("servicing");
+      }
+    }
   };
 
   return (
-    <>
-      {isLoading ? (
-        <Fallback />
-      ) : (
-        <Container maxWidth="lg" sx={{ zIndex: 2, marginBottom: 8 }}>
-          <Box
-            sx={{
-              mb: 5,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <Typography variant="h4" sx={{ flexGrow: 1 }}>
-              Transaction Queue
-            </Typography>
-          </Box>
-          <Card>
-            <QueueTableToolbar
-              filterQuery={filterQuery}
-              handleToggleFilter={handleToggleFilter}
-              handleFilterChange={handleFilterQueryChange}
-            />
-            <Scrollbar>
-              <TableContainer sx={{ overflow: "unset" }}>
-                <Table sx={{ minWidth: 800 }}>
-                  <QueueTableHead
-                    order={order}
-                    orderBy={orderBy}
-                    handleSort={handleSort}
-                    headLabel={[
-                      { id: "id", label: "Queue No." },
-                      { id: "name", label: "Name" },
-                      { id: "rdo", label: "Revenue District" },
-                      { id: "transaction", label: "Transaction" },
-                      { id: "submittedAt", label: "Datetime Submitted" },
-                      { id: "status", label: "Status" },
-                    ]}
-                  />
+    <Container maxWidth="xl" sx={{ zIndex: 2, marginBottom: 8 }}>
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 7 }} order={{ xs: 1, sm: 2 }}>
+          <Typography component="div" variant="h4" sx={{ pb: 3 }}>
+            Servicing
+          </Typography>
+          {selected ? (
+            <Card>
+              <CardContent>
+                <Grid container spacing={3}>
+                  <Grid size={12}>
+                    <Typography variant="body1">
+                      {selected.id.split("-").slice(1).join("-")}
+                    </Typography>
+                    <Typography variant="h6">{selected.transaction}</Typography>
+                  </Grid>
+                  <Grid size={12}>
+                    <Box
+                      sx={{ display: "flex", flexWrap: "wrap", gap: 2, pb: 2 }}
+                    >
+                      <Label color="default">{selected.service}</Label>
+                      <Label color={getStatusColor(selected.status)}>
+                        {selected.status}
+                      </Label>
+                    </Box>
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <Typography variant="body1">
+                      {selected.firstName + " " + selected.lastName}
+                    </Typography>
+                    <Typography variant="subtitle2">Name</Typography>
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <Typography variant="body1">
+                      {selected.taxpayerTIN || "Not Entered"}
+                    </Typography>
+                    <Typography variant="subtitle2">TIN</Typography>
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <Typography variant="body1">{selected.contact}</Typography>
+                    <Typography variant="subtitle2">
+                      Contact Information
+                    </Typography>
+                  </Grid>
+                  <Grid size={12}>
+                    <Typography variant="h6">
+                      Checklist of Requirements
+                    </Typography>
+                    <List>
+                      {selected.checked &&
+                        selected.checked.map((req, index) => (
+                          <ListItem key={index}>
+                            <ListItemIcon>
+                              <CheckBoxIcon />
+                            </ListItemIcon>
+                            <ListItemText primary={req.trim()} />
+                          </ListItem>
+                        ))}
+                    </List>
+                  </Grid>
+                </Grid>
+              </CardContent>
+              <CardActions
+                sx={{ justifyContent: "flex-end", backgroundColor: "#E6F3FF" }}
+              >
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={handleRejectTransaction}
+                  disabled={loading}
+                >
+                  Invalid Requirements
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleStartTransaction}
+                  disabled={loading}
+                >
+                  Start Transaction
+                </Button>
+              </CardActions>
+            </Card>
+          ) : (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+                minHeight: 360,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {scan ? (
+                <div></div>
+              ) : (
+                <Typography variant="h6">No One Being Served</Typography>
+              )}
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<QrCodeScannerIcon />}
+                onClick={handleToggleScan}
+              >
+                {scan ? "Cancel Scanning" : "Scan Transaction Code"}
+              </Button>
+            </Box>
+          )}
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 5 }} order={{ xs: 2, sm: 1 }}>
+          <Typography component="div" variant="h4" sx={{ pb: 3 }}>
+            Queue
+          </Typography>
+          <Stack direction="column" spacing={2} justifyContent="stretch">
+            {queue.map((item) => (
+              <Card key={item.id}>
+                <CardContent>
+                  <Grid container spacing={2}>
+                    <Grid size={12}>
+                      <Typography variant="body1">
+                        {item.id.split("-").slice(1).join("-")}
+                      </Typography>
+                      <Typography variant="h6">
+                        {item.firstName + " " + item.lastName}
+                      </Typography>
+                    </Grid>
+                    <Grid size={12}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          width: "100%",
+                          alignItems: "center",
+                          flexDirection: "row",
+                          justifyContent: "flex-start",
+                          gap: 1,
+                        }}
+                      >
+                        <AccessTimeRoundedIcon fontSize="small" />
+                        <Typography variant="body2">
+                          {item.submittedAt.toDate().toLocaleString()}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid size={12}>
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+                        <Label color="default">{item.service}</Label>
+                        {item.category && (
+                          <Label color="default">{item.category}</Label>
+                        )}
+                        <Label color={getStatusColor(item.status)}>
+                          {item.status}
+                        </Label>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            ))}
+          </Stack>
+        </Grid>
+      </Grid>
 
-                  <TableBody>
-                    {filteredQueue
-                      .slice(
-                        page * rowsPerPage,
-                        page * rowsPerPage + rowsPerPage
-                      )
-                      .map((row) => (
-                        <QueueTableRow key={row.id} row={row} />
-                      ))}
-
-                    {filterQuery && filteredQueue.length === 0 && (
-                      <TableNoData searchQuery={filterQuery} />
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Scrollbar>
-
-            <TablePagination
-              component="div"
-              page={page}
-              count={filteredQueue.length}
-              rowsPerPage={rowsPerPage}
-              onPageChange={handleChangePage}
-              rowsPerPageOptions={[5, 10, 20]}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-            />
-          </Card>
-        </Container>
-      )}
-
-      {filterOpen && (
-        <FilterDrawer
-          open={filterOpen}
-          onClose={handleToggleFilter}
-          filter={filter}
-          setFilter={handleFilterChange}
-        />
-      )}
-    </>
+      <ConfirmDialog
+        open={confirmDialogOpen}
+        handleClose={handleConfirmDialogClose}
+        handleConfirm={handleConfirmReject}
+      />
+    </Container>
   );
 }
 
-function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
-  if (b[orderBy] < a[orderBy]) {
-    return -1;
+function getStatusColor(status: TransactionsStatus): LabelColor {
+  switch (status) {
+    case TransactionsStatus.COMPLETE_REQUIREMENTS:
+      return "primary";
+    case TransactionsStatus.INCOMPLETE_REQUIREMENTS:
+      return "secondary";
+    case TransactionsStatus.RECEIVED_REQUIREMENTS:
+      return "warning";
+    case TransactionsStatus.VERIFIED_REQUIREMENTS:
+      return "success";
+    case TransactionsStatus.INVALID_REQUIREMENTS:
+      return "error";
+    default:
+      return "default";
   }
-  if (b[orderBy] > a[orderBy]) {
-    return 1;
-  }
-  return 0;
-}
-
-function getComparator<Key extends keyof Queue>(
-  order: "asc" | "desc",
-  orderBy: Key
-): (a: Queue, b: Queue) => number {
-  return order === "desc"
-    ? (a, b) => descendingComparator<Queue>(a, b, orderBy)
-    : (a, b) => -descendingComparator<Queue>(a, b, orderBy);
-}
-
-type ApplyFilterProps = {
-  inputData: Queue[];
-  filterQuery: string;
-  orderBy: keyof Queue;
-  order: "asc" | "desc";
-};
-
-function applyFilter({
-  inputData,
-  filterQuery,
-  orderBy,
-  order,
-}: ApplyFilterProps) {
-  const stabilizedThis = inputData.map((el, index) => [el, index] as const);
-
-  stabilizedThis.sort((a, b) => {
-    const sorted = getComparator(order, orderBy)(a[0], b[0]);
-    if (sorted !== 0) return sorted;
-    return a[1] - b[1];
-  });
-
-  inputData = stabilizedThis.map((el) => el[0]);
-
-  if (filterQuery) {
-    inputData = inputData.filter(
-      (queue) =>
-        queue.search.toLowerCase().indexOf(filterQuery.toLowerCase()) !== -1
-    );
-  }
-
-  return inputData;
 }

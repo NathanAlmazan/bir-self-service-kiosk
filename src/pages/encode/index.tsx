@@ -303,7 +303,7 @@ export default function EncodePage() {
       });
 
       if (!uuid) {
-        router.push(`/encode/${reference}`);
+        router.push(`/dashboard/encode/${reference}`);
       }
     } catch (error) {
       console.error("Error submitting form data:", error);

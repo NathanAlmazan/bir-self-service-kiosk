@@ -5,6 +5,7 @@ import { useRouter } from "src/routes/hooks";
 import { useAppDispatch, useAppSelector } from "src/store/hooks";
 import { setUser, clearUser } from "src/store/slices/userSlice";
 import { UserRole } from "src/store/types";
+import { offices } from "./offices";
 
 import Fallback from "src/components/fallback";
 
@@ -31,7 +32,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 
         dispatch(
           setUser({
-            office: email,
+            office: offices.find((o) => o.id === email)?.name || "",
             role: userRole,
           })
         );
