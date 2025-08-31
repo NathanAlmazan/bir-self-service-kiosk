@@ -13,6 +13,8 @@ import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Button from "@mui/material/Button";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 
 import { db } from "src/firebase";
 import { useAppSelector } from "src/store/hooks";
@@ -31,6 +33,7 @@ import {
 import ConfirmDialog from "./confirm-dialog";
 import { Label, LabelColor } from "src/components/label";
 import { TransactionsStatus } from "src/pages/requirements/types";
+import { Scanner, IDetectedBarcode } from "@yudiel/react-qr-scanner";
 
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
@@ -58,6 +61,8 @@ export default function QueuePage() {
   const [queue, setQueue] = React.useState<QueueData[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = React.useState(false);
+  const [errorSnackbarOpen, setErrorSnackbarOpen] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [selected, setSelected] = React.useState<QueueData | null>(null);
   const [scan, setScan] = React.useState(false);
 
@@ -123,6 +128,10 @@ export default function QueuePage() {
           }
         } catch (error) {
           console.error("Error fetching queue task:", error);
+          setErrorMessage(
+            "Failed to fetch stored task. Please contact support."
+          );
+          setErrorSnackbarOpen(true);
         } finally {
           setLoading(false);
         }
@@ -144,6 +153,57 @@ export default function QueuePage() {
     setConfirmDialogOpen(false);
   };
 
+  const handleCloseErrorSnackbar = () => {
+    setErrorSnackbarOpen(false);
+  };
+
+  const handleStartService = async (result: IDetectedBarcode[]) => {
+    if (result.length > 0) {
+      const code: string = result[0].rawValue;
+      const queueId = atob(code).split("/").pop();
+
+      const storedId = window.localStorage.getItem("servicing");
+
+      if (storedId) {
+        setErrorMessage("There is an active task stored. Please reload page.");
+        setErrorSnackbarOpen(true);
+      } else {
+        const queueData = queue.find(q => q.id === queueId);
+
+        if (queueId && queueData) {
+          setLoading(true);
+          try {
+            // update the taxpayer document with the verification
+            const taxpayerDocRef = doc(db, "taxpayers", queueId);
+            await updateDoc(taxpayerDocRef, {
+              status: TransactionsStatus.RECEIVED_REQUIREMENTS,
+            });
+
+            window.localStorage.setItem("servicing", queueId);
+
+            setSelected({
+              ...queueData,
+              status: TransactionsStatus.RECEIVED_REQUIREMENTS
+            });
+
+            setQueue(prev => prev.filter(q => q.id !== queueId));
+          } catch (error) {
+            console.error("Error submitting status:", error);
+            setErrorMessage(
+              "Failed to update transaction. Please contact support."
+            );
+            setErrorSnackbarOpen(true);
+          } finally {
+            setLoading(false);
+          }
+        } else {
+          setErrorMessage("Cannot find transaction. Please make sure that the transaction belongs to your office.");
+          setErrorSnackbarOpen(true);
+        }
+      }
+    }
+  };
+
   const handleStartTransaction = async () => {
     if (selected) {
       setLoading(true);
@@ -153,12 +213,19 @@ export default function QueuePage() {
         await updateDoc(taxpayerDocRef, {
           status: TransactionsStatus.VERIFIED_REQUIREMENTS,
         });
+        
+        setScan(false);
+        setSelected(null);
+
+        window.localStorage.removeItem("servicing");
       } catch (error) {
         console.error("Error submitting status:", error);
+        setErrorMessage(
+          "Failed to update transaction. Please contact support."
+        );
+        setErrorSnackbarOpen(true);
       } finally {
         setLoading(false);
-        setSelected(null);
-        window.localStorage.removeItem("servicing");
       }
     }
   };
@@ -172,12 +239,19 @@ export default function QueuePage() {
         await updateDoc(taxpayerDocRef, {
           status: TransactionsStatus.INVALID_REQUIREMENTS,
         });
+
+        setScan(false);
+        setSelected(null);
+
+        window.localStorage.removeItem("servicing");
       } catch (error) {
         console.error("Error submitting status:", error);
+        setErrorMessage(
+          "Failed to update transaction. Please contact support."
+        );
+        setErrorSnackbarOpen(true);
       } finally {
         setLoading(false);
-        setSelected(null);
-        window.localStorage.removeItem("servicing");
       }
     }
   };
@@ -278,9 +352,18 @@ export default function QueuePage() {
               }}
             >
               {scan ? (
-                <div></div>
+                <Scanner
+                  onScan={handleStartService}
+                  onError={(error) => alert(error)}
+                  scanDelay={300}
+                  sound={true}
+                  paused={!scan}
+                />
               ) : (
-                <Typography variant="h6">No One Being Served</Typography>
+                <Typography component="div" textAlign="center" variant="h6">
+                  No Taxpayer currently being served. Please scan a receipt to
+                  start.
+                </Typography>
               )}
               <Button
                 variant="contained"
@@ -351,6 +434,21 @@ export default function QueuePage() {
         handleClose={handleConfirmDialogClose}
         handleConfirm={handleConfirmReject}
       />
+
+      <Snackbar
+        open={errorSnackbarOpen}
+        autoHideDuration={5000}
+        onClose={handleCloseErrorSnackbar}
+      >
+        <Alert
+          onClose={handleCloseErrorSnackbar}
+          severity="error"
+          variant="outlined"
+          sx={{ width: "100%" }}
+        >
+          {errorMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }

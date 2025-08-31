@@ -526,9 +526,9 @@ export default function EncodePage() {
             onClose={handleClose}
           >
             <Alert
+              variant="outlined"
               onClose={handleClose}
               severity="error"
-              variant="filled"
               sx={{ width: "100%" }}
             >
               {errorMessage}

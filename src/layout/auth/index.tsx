@@ -4,7 +4,6 @@ import { merge } from "es-toolkit";
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Alert from "@mui/material/Alert";
 
 import { Logo } from "src/components/logo";
 
@@ -44,11 +43,6 @@ export default function AuthLayout({
     };
 
     const headerSlots: HeaderSectionProps["slots"] = {
-      topArea: (
-        <Alert severity="info" sx={{ display: "none", borderRadius: 0 }}>
-          This is an info Alert.
-        </Alert>
-      ),
       leftArea: (
         <>
           {/** @slot Logo */}

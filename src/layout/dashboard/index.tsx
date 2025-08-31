@@ -6,7 +6,6 @@ import { merge } from "es-toolkit";
 import { useBoolean } from "minimal-shared/hooks";
 
 import Box from "@mui/material/Box";
-import Alert from "@mui/material/Alert";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { useTheme } from "@mui/material/styles";
@@ -118,11 +117,6 @@ export default function DashboardLayout({
     };
 
     const headerSlots: HeaderSectionProps["slots"] = {
-      topArea: (
-        <Alert severity="info" sx={{ display: "none", borderRadius: 0 }}>
-          This is an info Alert.
-        </Alert>
-      ),
       leftArea: (
         <>
           {/** @slot Nav mobile */}
