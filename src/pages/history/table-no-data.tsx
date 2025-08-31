@@ -18,16 +18,24 @@ export default function TableNoData({
   return (
     <TableRow {...other}>
       <TableCell align="center" colSpan={7}>
-        <Box sx={{ py: 15, textAlign: "center" }}>
+        <Box sx={{ py: 3, textAlign: "center" }}>
+          <img alt="no-content" width="280px" src="/bg/no-content.svg" />
+
           <Typography variant="h6" sx={{ mb: 1 }}>
-            Not found
+            No Data Found
           </Typography>
 
-          <Typography variant="body2">
+          {searchQuery.length > 0 ? (
+            <Typography variant="body2">
             No results found for &nbsp;
             <strong>&quot;{searchQuery}&quot;</strong>.
             <br /> Try checking for typos or using complete words.
           </Typography>
+          ) : (
+            <Typography variant="body2">
+              There is no data yet.
+            </Typography>
+          )}
         </Box>
       </TableCell>
     </TableRow>

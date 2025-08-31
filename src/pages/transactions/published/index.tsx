@@ -127,7 +127,7 @@ export default function PublishedTransactionsPage() {
       {isLoading || (filtered.length === 0 && searchQuery.length === 0) ? (
         <Fallback />
       ) : (
-        <Container maxWidth="lg" sx={{ zIndex: 2 }}>
+        <Container maxWidth="lg" sx={{ zIndex: 2, marginBottom: 8 }}>
           <Grid container spacing={3} maxWidth="lg" alignItems="stretch">
             {/* Page Header */}
             <Grid size={{ sm: 12, md: 6, lg: 8 }}>

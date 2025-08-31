@@ -10,11 +10,22 @@ import type { Queue } from ".";
 
 type QueueTableRowProps = {
   row: Queue;
+  selected: string | null;
+  onSelect: (id: string) => void;
 };
 
-export default function QueueTableRow({ row }: QueueTableRowProps) {
+export default function QueueTableRow({
+  row,
+  selected,
+  onSelect,
+}: QueueTableRowProps) {
   return (
-    <TableRow>
+    <TableRow
+      selected={selected === row.id}
+      hover
+      sx={{ cursor: "pointer" }}
+      onClick={() => onSelect(row.id)}
+    >
       <TableCell component="th" scope="row">
         <Typography variant="body2" fontWeight="bold">
           {row.id.split("-").slice(1).join("-")}

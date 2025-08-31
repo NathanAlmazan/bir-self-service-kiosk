@@ -102,7 +102,7 @@ export default function SignInPage() {
         }}
       >
         {error && (
-          <Alert variant="outlined" severity="error" sx={{ width: "100%" }}>
+          <Alert variant="filled" severity="error" sx={{ width: "100%" }}>
             {error}
           </Alert>
         )}

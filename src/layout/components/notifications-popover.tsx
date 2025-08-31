@@ -8,28 +8,24 @@ import Badge from "@mui/material/Badge";
 import Button from "@mui/material/Button";
 import Avatar from "@mui/material/Avatar";
 import Divider from "@mui/material/Divider";
-import Tooltip from "@mui/material/Tooltip";
 import Popover from "@mui/material/Popover";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import ListItemText from "@mui/material/ListItemText";
-import ListSubheader from "@mui/material/ListSubheader";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
 import ListItemButton from "@mui/material/ListItemButton";
 
 import { Scrollbar } from "src/components/scrollbar";
 
-import DoneAllTwoToneIcon from "@mui/icons-material/DoneAllTwoTone";
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import NotificationsNoneTwoToneIcon from "@mui/icons-material/NotificationsNoneTwoTone";
 
 // ----------------------------------------------------------------------
 
-type NotificationItemProps = {
+export type NotificationItemProps = {
   id: string;
   type: string;
   title: string;
-  isUnRead: boolean;
   description: string;
   avatarUrl: string | null;
   postedAt: string | null;
@@ -44,11 +40,6 @@ export function NotificationsPopover({
   sx,
   ...other
 }: NotificationsPopoverProps) {
-  const [notifications, setNotifications] = useState(data);
-
-  const totalUnRead = notifications.filter(
-    (item) => item.isUnRead === true
-  ).length;
 
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(
     null
@@ -65,15 +56,6 @@ export function NotificationsPopover({
     setOpenPopover(null);
   }, []);
 
-  const handleMarkAllAsRead = useCallback(() => {
-    const updatedNotifications = notifications.map((notification) => ({
-      ...notification,
-      isUnRead: false,
-    }));
-
-    setNotifications(updatedNotifications);
-  }, [notifications]);
-
   return (
     <>
       <IconButton
@@ -82,7 +64,7 @@ export function NotificationsPopover({
         sx={sx}
         {...other}
       >
-        <Badge badgeContent={totalUnRead} color="error">
+        <Badge badgeContent={data.length} color="error">
           <NotificationsNoneTwoToneIcon />
         </Badge>
       </IconButton>
@@ -116,63 +98,43 @@ export function NotificationsPopover({
           <Box sx={{ flexGrow: 1 }}>
             <Typography variant="subtitle1">Notifications</Typography>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              You have {totalUnRead} unread messages
+              {`${data.length} ${
+                data.length > 1 ? "notifications" : "notification"
+              } need your attention.`}
             </Typography>
           </Box>
-
-          {totalUnRead > 0 && (
-            <Tooltip title=" Mark all as read">
-              <IconButton color="primary" onClick={handleMarkAllAsRead}>
-                <DoneAllTwoToneIcon />
-              </IconButton>
-            </Tooltip>
-          )}
         </Box>
 
         <Divider sx={{ borderStyle: "dashed" }} />
 
-        <Scrollbar
-          fillContent
-          sx={{ minHeight: 240, maxHeight: { xs: 360, sm: "none" } }}
-        >
-          <List
-            disablePadding
-            subheader={
-              <ListSubheader
-                disableSticky
-                sx={{ py: 1, px: 2.5, typography: "overline" }}
-              >
-                New
-              </ListSubheader>
-            }
+        {data.length > 0 ? (
+          <Scrollbar
+            fillContent
+            sx={{ minHeight: 240, maxHeight: { xs: 360, sm: "none" } }}
           >
-            {notifications.slice(0, 2).map((notification) => (
-              <NotificationItem
-                key={notification.id}
-                notification={notification}
-              />
-            ))}
-          </List>
-
-          <List
-            disablePadding
-            subheader={
-              <ListSubheader
-                disableSticky
-                sx={{ py: 1, px: 2.5, typography: "overline" }}
-              >
-                Before that
-              </ListSubheader>
-            }
+            <List>
+              {data.map((notification) => (
+                <NotificationItem
+                  key={notification.id}
+                  notification={notification}
+                />
+              ))}
+            </List>
+          </Scrollbar>
+        ) : (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              p: 2,
+            }}
           >
-            {notifications.slice(2, 5).map((notification) => (
-              <NotificationItem
-                key={notification.id}
-                notification={notification}
-              />
-            ))}
-          </List>
-        </Scrollbar>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+              No new notifications
+            </Typography>
+          </Box>
+        )}
 
         <Divider sx={{ borderStyle: "dashed" }} />
 
@@ -200,10 +162,7 @@ function NotificationItem({
       sx={{
         py: 1.5,
         px: 2.5,
-        mt: "1px",
-        ...(notification.isUnRead && {
-          bgcolor: "action.selected",
-        }),
+        mt: "1px"
       }}
     >
       <ListItemAvatar>
@@ -260,7 +219,7 @@ function renderContent(notification: NotificationItemProps) {
       avatarUrl: (
         <img
           alt={notification.title}
-          src="/assets/icons/notification/ic-notification-package.svg"
+          src="/icons/notification/ic-notification-package.svg"
         />
       ),
       title,
@@ -271,7 +230,7 @@ function renderContent(notification: NotificationItemProps) {
       avatarUrl: (
         <img
           alt={notification.title}
-          src="/assets/icons/notification/ic-notification-shipping.svg"
+          src="/icons/notification/ic-notification-shipping.svg"
         />
       ),
       title,
@@ -282,7 +241,7 @@ function renderContent(notification: NotificationItemProps) {
       avatarUrl: (
         <img
           alt={notification.title}
-          src="/assets/icons/notification/ic-notification-mail.svg"
+          src="/icons/notification/ic-notification-mail.svg"
         />
       ),
       title,
@@ -293,7 +252,7 @@ function renderContent(notification: NotificationItemProps) {
       avatarUrl: (
         <img
           alt={notification.title}
-          src="/assets/icons/notification/ic-notification-chat.svg"
+          src="/icons/notification/ic-notification-chat.svg"
         />
       ),
       title,

@@ -23,8 +23,18 @@ import { Label } from "src/components/label";
 import { signOut } from "src/firebase";
 import { useAppDispatch, useAppSelector } from "src/store/hooks";
 import { clearUser } from "src/store/slices/userSlice";
+import { db } from "src/firebase";
+import {
+  onSnapshot,
+  collection,
+  query,
+  where,
+  orderBy,
+  getDocs,
+} from "firebase/firestore";
 
 import ClassOutlinedIcon from "@mui/icons-material/ClassOutlined";
+import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
 import HorizontalSplitOutlinedIcon from "@mui/icons-material/HorizontalSplitOutlined";
 import CandlestickChartOutlinedIcon from "@mui/icons-material/CandlestickChartOutlined";
 
@@ -32,8 +42,10 @@ import { UserRole } from "src/store/types";
 import type { MainSectionProps } from "../core/main-section";
 import type { HeaderSectionProps } from "../core/header-section";
 import type { LayoutSectionProps } from "../core/layout-section";
+import type { NotificationItemProps } from "../components/notifications-popover";
 
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import { TransactionsStatus } from "src/pages/requirements/types";
 
 // ----------------------------------------------------------------------
 
@@ -64,9 +76,13 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   const theme = useTheme();
   const dispatch = useAppDispatch();
-  const { role } = useAppSelector((state) => state.user);
+  const { office, role } = useAppSelector((state) => state.user);
 
+  const [queueCount, setQueueCount] = useState(0);
   const [navigations, setNavigations] = useState<NavItem[]>([]);
+  const [notifications, setNotifications] = useState<NotificationItemProps[]>(
+    []
+  );
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
 
@@ -83,8 +99,8 @@ export default function DashboardLayout({
         path: "/dashboard/queue",
         icon: <HorizontalSplitOutlinedIcon />,
         info: (
-          <Label color="info" variant="inverted">
-            {"+3 New"}
+          <Label color={queueCount > 25 ? "error" : "info"} variant="inverted">
+            {`+${queueCount} New`}
           </Label>
         ),
         roles: [UserRole.OFFICER],
@@ -92,7 +108,7 @@ export default function DashboardLayout({
       {
         title: "History",
         path: "/dashboard/history",
-        icon: <HorizontalSplitOutlinedIcon />,
+        icon: <HistoryOutlinedIcon />,
         roles: [UserRole.ADMIN, UserRole.OFFICER],
       },
       {
@@ -102,7 +118,68 @@ export default function DashboardLayout({
         roles: [UserRole.ADMIN],
       },
     ]);
-  }, []);
+  }, [queueCount]);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      query(
+        collection(db, "taxpayers"),
+        where("rdo", "==", office),
+        where("status", "==", TransactionsStatus.COMPLETE_REQUIREMENTS),
+        orderBy("submittedAt", "asc")
+      ),
+      (snapshot) => {
+        setQueueCount(snapshot.size);
+
+        if (snapshot.size > 0) {
+          setNotifications((prev) => [
+            ...prev,
+            {
+              id: "queue",
+              title: `There are ${snapshot.size} ${
+                snapshot.size > 1 ? "transactions" : "transaction"
+              } in queue.`,
+              description: "Please process them as soon as possible.",
+              avatarUrl: null,
+              postedAt: new Date().toLocaleDateString(),
+              type: "chat-message",
+            },
+          ]);
+        }
+      }
+    );
+
+    return () => unsubscribe();
+  }, [office]);
+
+  useEffect(() => {
+    const fetchPendingCharters = async () => {
+      const snapshot = await getDocs(
+        query(collection(db, "charter"), where("publish", "!=", true))
+      );
+
+      if (snapshot.size > 0) {
+        setNotifications((prev) => [
+          ...prev,
+          {
+            id: "charter",
+            title: `There are ${snapshot.size} unpublished ${
+              snapshot.size > 1 ? "transactions" : "transaction"
+            }.`,
+            description:
+              "Please review and publish them to make them available for taxpayers.",
+            avatarUrl: null,
+            postedAt: new Date().toLocaleDateString(),
+            type: "mail",
+          },
+        ]);
+      }
+    };
+
+    if (role === UserRole.ADMIN) {
+      fetchPendingCharters();
+    }
+  }, [role]);
 
   const renderHeader = () => {
     const renderSignOut = async () => {
@@ -146,7 +223,7 @@ export default function DashboardLayout({
           }}
         >
           {/** @slot Notifications popover */}
-          <NotificationsPopover data={[]} />
+          <NotificationsPopover data={notifications} />
 
           <Tooltip title="Sign Out">
             <IconButton onClick={renderSignOut}>

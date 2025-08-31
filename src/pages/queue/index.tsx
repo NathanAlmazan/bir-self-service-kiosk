@@ -108,8 +108,14 @@ export default function QueuePage() {
         setLoading(true);
         try {
           const taxpayerDocRef = doc(db, "taxpayers", storedId);
+
+          await updateDoc(taxpayerDocRef, {
+            status: TransactionsStatus.RECEIVED_REQUIREMENTS,
+          });
+
           const docSnap = await getDoc(taxpayerDocRef);
-          if (docSnap.exists()) {
+
+          if (docSnap.exists() && docSnap.data().rdo === office) {
             const data = docSnap.data() as QueueData;
             setSelected({
               id: docSnap.id,
@@ -124,6 +130,7 @@ export default function QueuePage() {
               contact: data.contact,
               submittedAt: data.submittedAt,
               checked: data.checked || [],
+              category: data.category,
             });
           }
         } catch (error) {
@@ -139,7 +146,7 @@ export default function QueuePage() {
     };
 
     fetchQueueTask();
-  }, []);
+  }, [office]);
 
   const handleToggleScan = () => {
     setScan((prev) => !prev);
@@ -168,7 +175,7 @@ export default function QueuePage() {
         setErrorMessage("There is an active task stored. Please reload page.");
         setErrorSnackbarOpen(true);
       } else {
-        const queueData = queue.find(q => q.id === queueId);
+        const queueData = queue.find((q) => q.id === queueId);
 
         if (queueId && queueData) {
           setLoading(true);
@@ -183,10 +190,10 @@ export default function QueuePage() {
 
             setSelected({
               ...queueData,
-              status: TransactionsStatus.RECEIVED_REQUIREMENTS
+              status: TransactionsStatus.RECEIVED_REQUIREMENTS,
             });
 
-            setQueue(prev => prev.filter(q => q.id !== queueId));
+            setQueue((prev) => prev.filter((q) => q.id !== queueId));
           } catch (error) {
             console.error("Error submitting status:", error);
             setErrorMessage(
@@ -197,7 +204,9 @@ export default function QueuePage() {
             setLoading(false);
           }
         } else {
-          setErrorMessage("Cannot find transaction. Please make sure that the transaction belongs to your office.");
+          setErrorMessage(
+            "Cannot find transaction. Please make sure that the transaction belongs to your office."
+          );
           setErrorSnackbarOpen(true);
         }
       }
@@ -213,7 +222,7 @@ export default function QueuePage() {
         await updateDoc(taxpayerDocRef, {
           status: TransactionsStatus.VERIFIED_REQUIREMENTS,
         });
-        
+
         setScan(false);
         setSelected(null);
 
@@ -256,6 +265,11 @@ export default function QueuePage() {
     }
   };
 
+  const handleScannerError = () => {
+    setErrorMessage("Failed to scan QR code. Please try again.");
+    setErrorSnackbarOpen(true);
+  };
+
   return (
     <Container maxWidth="xl" sx={{ zIndex: 2, marginBottom: 8 }}>
       <Grid container spacing={3}>
@@ -266,40 +280,60 @@ export default function QueuePage() {
           {selected ? (
             <Card>
               <CardContent>
-                <Grid container spacing={3}>
+                <Grid container spacing={2}>
                   <Grid size={12}>
                     <Typography variant="body1">
                       {selected.id.split("-").slice(1).join("-")}
                     </Typography>
-                    <Typography variant="h6">{selected.transaction}</Typography>
+                    <Typography variant="h6">
+                      {selected.firstName + " " + selected.lastName}
+                    </Typography>
                   </Grid>
                   <Grid size={12}>
                     <Box
-                      sx={{ display: "flex", flexWrap: "wrap", gap: 2, pb: 2 }}
+                      sx={{
+                        display: "flex",
+                        width: "100%",
+                        alignItems: "center",
+                        flexDirection: "row",
+                        justifyContent: "flex-start",
+                        gap: 1,
+                      }}
                     >
+                      <AccessTimeRoundedIcon fontSize="small" />
+                      <Typography variant="body2">
+                        {selected.submittedAt.toDate().toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid size={12}>
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
                       <Label color="default">{selected.service}</Label>
+                      {selected.category && (
+                        <Label color="default">{selected.category}</Label>
+                      )}
                       <Label color={getStatusColor(selected.status)}>
                         {selected.status}
                       </Label>
                     </Box>
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <Grid size={12}>
                     <Typography variant="body1">
-                      {selected.firstName + " " + selected.lastName}
+                      {selected.transaction}
                     </Typography>
-                    <Typography variant="subtitle2">Name</Typography>
+                    <Typography variant="subtitle2">Transaction</Typography>
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                    <Typography variant="body1">
-                      {selected.taxpayerTIN || "Not Entered"}
-                    </Typography>
-                    <Typography variant="subtitle2">TIN</Typography>
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
                     <Typography variant="body1">{selected.contact}</Typography>
                     <Typography variant="subtitle2">
                       Contact Information
                     </Typography>
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <Typography variant="body1">
+                      {selected.taxpayerTIN || "Not Entered"}
+                    </Typography>
+                    <Typography variant="subtitle2">TIN</Typography>
                   </Grid>
                   <Grid size={12}>
                     <Typography variant="h6">
@@ -323,8 +357,8 @@ export default function QueuePage() {
                 sx={{ justifyContent: "flex-end", backgroundColor: "#E6F3FF" }}
               >
                 <Button
-                  variant="contained"
-                  color="error"
+                  variant="outlined"
+                  color="primary"
                   onClick={handleRejectTransaction}
                   disabled={loading}
                 >
@@ -354,32 +388,56 @@ export default function QueuePage() {
               {scan ? (
                 <Scanner
                   onScan={handleStartService}
-                  onError={(error) => alert(error)}
+                  onError={handleScannerError}
                   scanDelay={300}
                   sound={true}
                   paused={!scan}
                 />
               ) : (
                 <Typography component="div" textAlign="center" variant="h6">
-                  No Taxpayer currently being served. Please scan a receipt to
-                  start.
+                  {`No Taxpayer currently being served.${
+                    queue.length > 0 ? "  Please scan a receipt to start." : ""
+                  }`}
                 </Typography>
               )}
-              <Button
-                variant="contained"
-                size="large"
-                startIcon={<QrCodeScannerIcon />}
-                onClick={handleToggleScan}
-              >
-                {scan ? "Cancel Scanning" : "Scan Transaction Code"}
-              </Button>
+
+              {queue.length > 0 && (
+                <Button
+                  variant="contained"
+                  size="large"
+                  startIcon={<QrCodeScannerIcon />}
+                  onClick={handleToggleScan}
+                  disabled={loading}
+                >
+                  {scan ? "Cancel Scanning" : "Scan Transaction Code"}
+                </Button>
+              )}
             </Box>
           )}
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 5 }} order={{ xs: 2, sm: 1 }}>
           <Typography component="div" variant="h4" sx={{ pb: 3 }}>
-            Queue
+            {`Queue (${queue.length})`}
           </Typography>
+
+          {queue.length === 0 && (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+                minHeight: 360,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <img alt="done-tasks" width="280px" src="/bg/done-tasks.svg" />
+              <Typography component="div" textAlign="center" variant="h6">
+                All done! No queued transactions.
+              </Typography>
+            </Box>
+          )}
+
           <Stack direction="column" spacing={2} justifyContent="stretch">
             {queue.map((item) => (
               <Card key={item.id}>
@@ -443,7 +501,7 @@ export default function QueuePage() {
         <Alert
           onClose={handleCloseErrorSnackbar}
           severity="error"
-          variant="outlined"
+          variant="filled"
           sx={{ width: "100%" }}
         >
           {errorMessage}

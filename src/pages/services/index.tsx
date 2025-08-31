@@ -6,7 +6,7 @@ import WelcomeCard from "./welcome";
 
 export default function ServicesPage() {
   return (
-    <Container maxWidth="lg" sx={{ zIndex: 2 }}>
+    <Container maxWidth="lg" sx={{ zIndex: 2, marginBottom: 8 }}>
       <Grid container spacing={5} alignItems="stretch">
         <Grid size={{ sm: 12, md: 6, lg: 5 }}>
           <WelcomeCard />

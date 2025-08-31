@@ -74,7 +74,7 @@ export function AnalyticsConversionRates({ title, subheader, chart, sx, ...other
           pl: 1,
           py: 2.5,
           pr: 2.5,
-          height: 360,
+          height: 540,
         }}
       />
     </Card>

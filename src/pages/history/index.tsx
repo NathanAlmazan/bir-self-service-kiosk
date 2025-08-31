@@ -29,6 +29,7 @@ import TableNoData from "./table-no-data";
 // Types
 import { TransactionsStatus } from "src/pages/requirements/types";
 
+const FormDialog = React.lazy(() => import("./transaction-form"));
 const FilterDrawer = React.lazy(() => import("./filter-drawer"));
 
 export type QueueRaw = {
@@ -188,6 +189,24 @@ export default function QueuePage() {
     setFilterQuery(event.target.value);
   };
 
+  // ================ Table Row Selection ====================
+  const [selected, setSelected] = React.useState<string | null>(null);
+  const [formDialogOpen, setFormDialogOpen] = React.useState(false);
+
+  const handleRowSelect = (id: string) => {
+    if (selected === id) {
+      setSelected(null);
+    } else {
+      setSelected(id);
+      setFormDialogOpen(true);
+    }
+  };
+
+  const handleFormDialogClose =  () => {
+    setFormDialogOpen(false);
+    setSelected(null);
+  };
+
   return (
     <>
       {isLoading ? (
@@ -235,10 +254,15 @@ export default function QueuePage() {
                         page * rowsPerPage + rowsPerPage
                       )
                       .map((row) => (
-                        <QueueTableRow key={row.id} row={row} />
+                        <QueueTableRow
+                          key={row.id}
+                          row={row}
+                          selected={selected}
+                          onSelect={handleRowSelect}
+                        />
                       ))}
 
-                    {filterQuery && filteredQueue.length === 0 && (
+                    {filteredQueue.length === 0 && (
                       <TableNoData searchQuery={filterQuery} />
                     )}
                   </TableBody>
@@ -265,6 +289,14 @@ export default function QueuePage() {
           onClose={handleToggleFilter}
           filter={filter}
           setFilter={handleFilterChange}
+        />
+      )}
+
+      {formDialogOpen && (
+        <FormDialog
+          selected={selected}
+          open={formDialogOpen}
+          onClose={handleFormDialogClose}
         />
       )}
     </>
