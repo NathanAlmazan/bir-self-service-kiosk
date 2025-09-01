@@ -2,7 +2,6 @@ import * as React from "react";
 
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
-import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
@@ -128,10 +127,8 @@ export default function TransactionForm({
       padding={2}
       spacing={3}
       onSubmit={handleSave}
+      sx={{ mt: 2 }}
     >
-      <Grid size={12}>
-        <Typography variant="h4">Transaction Details</Typography>
-      </Grid>
       <Grid size={12}>
         <TextField
           label="Title"

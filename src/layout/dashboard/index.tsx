@@ -98,11 +98,15 @@ export default function DashboardLayout({
         title: "Queue",
         path: "/dashboard/queue",
         icon: <HorizontalSplitOutlinedIcon />,
-        info: (
-          <Label color={queueCount > 25 ? "error" : "info"} variant="inverted">
-            {`+${queueCount} New`}
-          </Label>
-        ),
+        info:
+          queueCount > 0 ? (
+            <Label
+              color={queueCount > 25 ? "error" : "info"}
+              variant="inverted"
+            >
+              {`+${queueCount} New`}
+            </Label>
+          ) : null,
         roles: [UserRole.OFFICER],
       },
       {
@@ -132,8 +136,7 @@ export default function DashboardLayout({
         setQueueCount(snapshot.size);
 
         if (snapshot.size > 0) {
-          setNotifications((prev) => [
-            ...prev,
+          setNotifications([
             {
               id: "queue",
               title: `There are ${snapshot.size} ${
@@ -141,7 +144,14 @@ export default function DashboardLayout({
               } in queue.`,
               description: "Please process them as soon as possible.",
               avatarUrl: null,
-              postedAt: new Date().toLocaleDateString(),
+              postedAt: new Date().toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              }),
               type: "chat-message",
             },
           ]);
@@ -159,8 +169,7 @@ export default function DashboardLayout({
       );
 
       if (snapshot.size > 0) {
-        setNotifications((prev) => [
-          ...prev,
+        setNotifications([
           {
             id: "charter",
             title: `There are ${snapshot.size} unpublished ${
@@ -169,7 +178,14 @@ export default function DashboardLayout({
             description:
               "Please review and publish them to make them available for taxpayers.",
             avatarUrl: null,
-            postedAt: new Date().toLocaleDateString(),
+            postedAt: new Date().toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            }),
             type: "mail",
           },
         ]);

@@ -91,12 +91,10 @@ export default function RequirementForm({
       component="form"
       container
       padding={2}
-      spacing={2}
+      spacing={3}
       onSubmit={handleSave}
+      sx={{ mt: 2 }}
     >
-      <Grid size={12}>
-        <Typography variant="h4">Requirement Details</Typography>
-      </Grid>
       <Grid size={12}>
         <TextField
           label="Document"

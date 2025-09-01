@@ -32,6 +32,11 @@ const services: Services[] = [
     image: "/icons/clearance.png",
     color: "warning",
   },
+  {
+    title: "Inquiry",
+    image: "/icons/inquiry.png",
+    color: "secondary",
+  },
 ];
 
 export default function ServiceGrid() {
@@ -41,9 +46,11 @@ export default function ServiceGrid() {
     _: React.MouseEvent<HTMLDivElement>,
     service: string
   ) => {
-    router.push(
-      `/kiosk/transactions/${service.toLowerCase().replace(/ & /g, "-")}`
-    );
+    if (service.toLowerCase() !== "inquiry") {
+      router.push(
+        `/kiosk/transactions/${service.toLowerCase().replace(/ & /g, "-")}`
+      );
+    }
   };
 
   return (

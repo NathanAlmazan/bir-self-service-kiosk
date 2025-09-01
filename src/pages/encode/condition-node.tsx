@@ -66,7 +66,7 @@ export default function ConditionNode({
   selected: string;
   handleSelect: (node: TransactionNode) => void;
 }) {
-  const [expand, setExpand] = React.useState(data.id === "root" ? true : false);
+  const [expand, setExpand] = React.useState(true);
 
   const handleToggleExpand = () => {
     if (selected === data.id) {

@@ -17,6 +17,7 @@ export type Transaction = {
   duration: string;
   service: string;
   category?: string;
+  publish?: boolean;
   checklist?: {
     pdfLink: string;
     imageLink: string;

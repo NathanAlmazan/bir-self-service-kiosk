@@ -251,6 +251,7 @@ export default function QueuePage() {
 
         setScan(false);
         setSelected(null);
+        setConfirmDialogOpen(false);
 
         window.localStorage.removeItem("servicing");
       } catch (error) {

@@ -11,6 +11,8 @@ import InputAdornment from "@mui/material/InputAdornment";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Button from "@mui/material/Button";
+// Animation
+import { AnimatePresence, motion } from "motion/react";
 // Firebase
 import { db } from "src/firebase";
 import { collection, getDocs } from "firebase/firestore";
@@ -58,6 +60,7 @@ export default function DraftTransactionsPage() {
             fee: doc.data().fee,
             service: doc.data().service,
             category: doc.data().category,
+            publish: doc.data().publish || false,
           })
         );
 
@@ -81,7 +84,9 @@ export default function DraftTransactionsPage() {
         transactions.filter(
           (t) =>
             t.service === services[tabValue] &&
-            t.title.toLowerCase().includes(searchQuery.toLowerCase())
+            (t.title + t.service + t.category)
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase())
         )
       );
 
@@ -169,20 +174,40 @@ export default function DraftTransactionsPage() {
             </Grid>
             {/* Transaction Cards */}
             <Grid size={12}>
-              <Grid container spacing={3} maxWidth="lg" alignItems="stretch">
-                {filtered.map((transaction) => (
-                  <Grid key={transaction.id} size={{ sm: 12, md: 6, lg: 4 }}>
-                    <TransactionCard
-                      id={transaction.id}
-                      title={transaction.title}
-                      duration={transaction.duration}
-                      fee={transaction.fee}
-                      category={transaction.category}
-                      handleClick={handleSelectTransaction}
-                    />
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={tabValue}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.5 }}
+                  style={{ width: "100%", height: "100%" }}
+                >
+                  <Grid
+                    container
+                    spacing={3}
+                    maxWidth="lg"
+                    alignItems="stretch"
+                  >
+                    {filtered.map((transaction) => (
+                      <Grid
+                        key={transaction.id}
+                        size={{ sm: 12, md: 6, lg: 4 }}
+                      >
+                        <TransactionCard
+                          id={transaction.id}
+                          title={transaction.title}
+                          duration={transaction.duration}
+                          fee={transaction.fee}
+                          category={transaction.category}
+                          publish={transaction.publish}
+                          handleClick={handleSelectTransaction}
+                        />
+                      </Grid>
+                    ))}
                   </Grid>
-                ))}
-              </Grid>
+                </motion.div>
+              </AnimatePresence>
             </Grid>
 
             {/* No Transactions Found */}

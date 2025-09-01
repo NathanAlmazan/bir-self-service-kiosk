@@ -30,7 +30,7 @@ export default function OverviewAnalyticsView() {
       <Grid container spacing={3} alignItems="stretch">
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <AnalyticsWidgetSummary
-            title="Users"
+            title="Total Served"
             total={234}
             color="primary"
             icon={<PeopleRoundedIcon fontSize="large" />}
@@ -176,7 +176,7 @@ export default function OverviewAnalyticsView() {
 
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <AnalyticsCurrentVisits
-            title="Service Demand"
+            title="Service Analytics"
             chart={{
               series: [
                 { label: "TIN Registration", value: 3500 },

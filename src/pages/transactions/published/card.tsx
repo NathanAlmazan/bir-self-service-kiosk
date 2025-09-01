@@ -68,7 +68,7 @@ export default function TransactionCard({
             <ListItemText
               primary={
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  {fee}
+                  {fee.replace(" — ", " ")}
                 </Typography>
               }
             />

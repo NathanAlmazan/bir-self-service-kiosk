@@ -8,16 +8,16 @@ import Stack from "@mui/material/Stack";
 import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
 import Divider from "@mui/material/Divider";
-import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Snackbar, { SnackbarCloseReason } from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
+import Button from "@mui/material/Button";
 // Icons
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import NoteAddOutlinedIcon from "@mui/icons-material/NoteAddOutlined";
 import CreateNewFolderOutlinedIcon from "@mui/icons-material/CreateNewFolderOutlined";
-import SaveIcon from "@mui/icons-material/Save";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 // Firebase
@@ -62,6 +62,26 @@ const createNodeInTree = (
       createNodeInTree(child, parentNodeId, newNode)
     ),
   };
+};
+
+const getParentNode = (
+  tree: TransactionNode,
+  childNodeId: string
+): TransactionNode | null => {
+  if (!tree.children) return null;
+
+  for (const child of tree.children) {
+    if (child.id === childNodeId) {
+      return tree;
+    }
+
+    const parent = getParentNode(child, childNodeId);
+    if (parent) {
+      return parent;
+    }
+  }
+
+  return null;
 };
 
 const updateNodeInTree = (
@@ -144,6 +164,7 @@ export default function EncodePage() {
             duration: results.duration,
             service: results.service,
             category: results.category,
+            publish: results.publish || false,
             children: results.requirements || [],
           };
 
@@ -193,7 +214,16 @@ export default function EncodePage() {
       children: [],
     };
 
-    setFormData((prev) => createNodeInTree(prev, selected.id, newNode));
+    if (selected.type === "requirement") {
+      const parentNode = getParentNode(formData, selected.id);
+
+      if (parentNode) {
+        setFormData((prev) => createNodeInTree(prev, parentNode.id, newNode));
+      }
+    } else {
+      setFormData((prev) => createNodeInTree(prev, selected.id, newNode));
+    }
+
     setSelected(newNode);
     setEditMode(true);
   };
@@ -207,9 +237,17 @@ export default function EncodePage() {
       type: "requirement",
     };
 
-    setFormData((prev) => createNodeInTree(prev, selected.id, newNode));
+    if (selected.type === "requirement") {
+      const parentNode = getParentNode(formData, selected.id);
+
+      if (parentNode) {
+        setFormData((prev) => createNodeInTree(prev, parentNode.id, newNode));
+      }
+    } else {
+      setFormData((prev) => createNodeInTree(prev, selected.id, newNode));
+    }
+
     setSelected(newNode);
-    setIsEdited(true);
     setEditMode(true);
   };
 
@@ -282,11 +320,11 @@ export default function EncodePage() {
 
   // Backend
 
-  const handleSubmit = async () => {
+  const handleSaveNew = async () => {
     setLoading(true);
 
     const clean: TransactionNode = JSON.parse(JSON.stringify(formData));
-    const reference = uuid || uuidv4();
+    const reference = uuidv4();
 
     try {
       const docRef = doc(db, "charter", reference);
@@ -302,9 +340,7 @@ export default function EncodePage() {
         publish: clean.publish || false,
       });
 
-      if (!uuid) {
-        router.push(`/dashboard/encode/${reference}`);
-      }
+      router.push(`/dashboard/encode/${reference}`);
     } catch (error) {
       console.error("Error submitting form data:", error);
       setErrorMessage(
@@ -316,6 +352,44 @@ export default function EncodePage() {
       setIsEdited(false);
     }
   };
+
+  React.useEffect(() => {
+    const submitChanges = async () => {
+      if (uuid) {
+        const clean: TransactionNode = JSON.parse(JSON.stringify(formData));
+        const reference = uuid;
+
+        try {
+          const docRef = doc(db, "charter", reference);
+          await setDoc(docRef, {
+            title: clean.name,
+            fee: clean.fee,
+            duration: clean.duration,
+            format: clean.format || "single-select",
+            service: clean.service,
+            category: clean.service === "REGISTRATION" ? clean.category : "",
+            requirements: clean.children || [],
+            updatedAt: Timestamp.now(),
+            publish: clean.publish || false,
+          });
+
+          console.info("Form data saved automatically.");
+        } catch (error) {
+          console.error("Error submitting form data:", error);
+          setErrorMessage(
+            "Failed to submit form data. Please try saving manually."
+          );
+          setOpenErrorSnackbar(true);
+        } finally {
+          setIsEdited(false);
+        }
+      }
+    };
+
+    if (isEdited && uuid && formData.id) {
+      submitChanges();
+    }
+  }, [router, isEdited, uuid, formData]);
 
   const handleDeletePage = async () => {
     if (!uuid) {
@@ -395,7 +469,7 @@ export default function EncodePage() {
               </Tooltip>
               <Tooltip title="Create Condition">
                 <IconButton
-                  disabled={!(selected && selected.type === "condition")}
+                  disabled={!selected}
                   onClick={createConditionNode}
                 >
                   <CreateNewFolderOutlinedIcon />
@@ -403,7 +477,7 @@ export default function EncodePage() {
               </Tooltip>
               <Tooltip title="Create Requirement">
                 <IconButton
-                  disabled={!(selected && selected.type === "condition")}
+                  disabled={!selected}
                   onClick={createRequirementNode}
                 >
                   <NoteAddOutlinedIcon />
@@ -414,14 +488,16 @@ export default function EncodePage() {
                   <OpenInNewIcon />
                 </IconButton>
               </Tooltip>
-              <Button
-                disabled={!isEdited}
-                variant="outlined"
-                startIcon={<SaveIcon />}
-                onClick={handleSubmit}
-              >
-                Save
-              </Button>
+              {!uuid && (
+                <Button
+                  disabled={!isEdited}
+                  variant="outlined"
+                  startIcon={<CloudUploadIcon />}
+                  onClick={handleSaveNew}
+                >
+                  Upload
+                </Button>
+              )}
             </Stack>
 
             <Divider />
@@ -438,23 +514,46 @@ export default function EncodePage() {
             </Scrollbar>
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 8 }}>
-            <Stack direction="row" justifyContent="flex-end" height={72}>
-              {!editMode && (
-                <Tooltip title="Edit">
-                  <IconButton onClick={() => setEditMode(true)}>
-                    <EditIcon />
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+            >
+              {selected && selected.id === "root" && (
+                <Typography variant="h4">Transaction Details</Typography>
+              )}
+
+              {selected &&
+                selected.id !== "root" &&
+                selected.type === "requirement" && (
+                  <Typography variant="h4">Requirement Details</Typography>
+                )}
+
+              {selected &&
+                selected.id !== "root" &&
+                selected.type === "condition" && (
+                  <Typography variant="h4">Condition Details</Typography>
+                )}
+
+              <Stack direction="row" justifyContent="flex-end" height={72}>
+                {!editMode && (
+                  <Button
+                    startIcon={<EditIcon />}
+                    onClick={() => setEditMode(true)}
+                  >
+                    Edit
+                  </Button>
+                )}
+                <Tooltip title="Delete">
+                  <IconButton
+                    color="error"
+                    onClick={handleOpenDeleteNodeDialog}
+                    disabled={selected && selected.id === "root"}
+                  >
+                    <DeleteOutlineOutlinedIcon />
                   </IconButton>
                 </Tooltip>
-              )}
-              <Tooltip title="Delete">
-                <IconButton
-                  color="error"
-                  onClick={handleOpenDeleteNodeDialog}
-                  disabled={selected && selected.id === "root"}
-                >
-                  <DeleteOutlineOutlinedIcon />
-                </IconButton>
-              </Tooltip>
+              </Stack>
             </Stack>
 
             <Divider />
@@ -467,6 +566,7 @@ export default function EncodePage() {
                 onCancel={handleCancelNodeUpdate}
               />
             )}
+
             {selected &&
               selected.id !== "root" &&
               selected.type === "requirement" && (
@@ -477,6 +577,7 @@ export default function EncodePage() {
                   onCancel={handleCancelNodeUpdate}
                 />
               )}
+
             {selected &&
               selected.id !== "root" &&
               selected.type === "condition" && (

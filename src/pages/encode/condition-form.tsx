@@ -1,6 +1,5 @@
 import * as React from "react";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
@@ -59,10 +58,10 @@ export default function ConditionForm({
       component="form"
       direction="column"
       padding={2}
-      spacing={2}
+      spacing={3}
       onSubmit={handleSave}
+      sx={{ mt: 2 }}
     >
-      <Typography variant="h4">Condition Details</Typography>
       <TextField
         label="Condition"
         name="name"

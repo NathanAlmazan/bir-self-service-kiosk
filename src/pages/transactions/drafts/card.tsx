@@ -10,6 +10,8 @@ import CardContent from "@mui/material/CardContent";
 import CardActions from "@mui/material/CardActions";
 import Button from "@mui/material/Button";
 
+import { Label } from "src/components/label";
+
 import TurnedInNotOutlinedIcon from "@mui/icons-material/TurnedInNotOutlined";
 import TimerOutlinedIcon from "@mui/icons-material/TimerOutlined";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -21,6 +23,7 @@ type TransactionProps = {
   duration: string;
   fee: string;
   category?: string;
+  publish?: boolean;
   handleClick: (
     event: React.MouseEvent<HTMLButtonElement>,
     transaction?: string
@@ -33,6 +36,7 @@ export default function TransactionCard({
   duration,
   fee,
   category,
+  publish,
   handleClick,
 }: TransactionProps) {
   return (
@@ -48,6 +52,11 @@ export default function TransactionCard({
         <Typography gutterBottom variant="h6" component="div">
           {title}
         </Typography>
+        {publish ? (
+          <Label color="success">Published</Label>
+        ) : (
+          <Label color="warning">Unpublished</Label>
+        )}
       </CardContent>
 
       <CardContent>

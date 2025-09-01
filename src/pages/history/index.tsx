@@ -17,6 +17,8 @@ import {
   where,
   Timestamp,
 } from "firebase/firestore";
+// Animation
+import { AnimatePresence, motion } from "motion/react";
 // Components
 import { useRouter } from "src/routes/hooks";
 import { Scrollbar } from "src/components/scrollbar";
@@ -202,7 +204,7 @@ export default function QueuePage() {
     }
   };
 
-  const handleFormDialogClose =  () => {
+  const handleFormDialogClose = () => {
     setFormDialogOpen(false);
     setSelected(null);
   };
@@ -224,62 +226,73 @@ export default function QueuePage() {
               Transaction History
             </Typography>
           </Box>
-          <Card>
-            <QueueTableToolbar
-              filterQuery={filterQuery}
-              handleToggleFilter={handleToggleFilter}
-              handleFilterChange={handleFilterQueryChange}
-            />
-            <Scrollbar>
-              <TableContainer sx={{ overflow: "unset" }}>
-                <Table sx={{ minWidth: 800 }}>
-                  <QueueTableHead
-                    order={order}
-                    orderBy={orderBy}
-                    handleSort={handleSort}
-                    headLabel={[
-                      { id: "id", label: "Queue No." },
-                      { id: "name", label: "Name" },
-                      { id: "rdo", label: "Revenue District" },
-                      { id: "transaction", label: "Transaction" },
-                      { id: "submittedAt", label: "Datetime Submitted" },
-                      { id: "status", label: "Status" },
-                    ]}
-                  />
+          <AnimatePresence>
+            <motion.div
+              key="card"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.5 }}
+              style={{ width: "100%", height: "100%" }}
+            >
+              <Card>
+                <QueueTableToolbar
+                  filterQuery={filterQuery}
+                  handleToggleFilter={handleToggleFilter}
+                  handleFilterChange={handleFilterQueryChange}
+                />
+                <Scrollbar>
+                  <TableContainer sx={{ overflow: "unset" }}>
+                    <Table sx={{ minWidth: 800 }}>
+                      <QueueTableHead
+                        order={order}
+                        orderBy={orderBy}
+                        handleSort={handleSort}
+                        headLabel={[
+                          { id: "id", label: "Queue No." },
+                          { id: "name", label: "Name" },
+                          { id: "rdo", label: "Revenue District" },
+                          { id: "transaction", label: "Transaction" },
+                          { id: "submittedAt", label: "Datetime Submitted" },
+                          { id: "status", label: "Status" },
+                        ]}
+                      />
 
-                  <TableBody>
-                    {filteredQueue
-                      .slice(
-                        page * rowsPerPage,
-                        page * rowsPerPage + rowsPerPage
-                      )
-                      .map((row) => (
-                        <QueueTableRow
-                          key={row.id}
-                          row={row}
-                          selected={selected}
-                          onSelect={handleRowSelect}
-                        />
-                      ))}
+                      <TableBody>
+                        {filteredQueue
+                          .slice(
+                            page * rowsPerPage,
+                            page * rowsPerPage + rowsPerPage
+                          )
+                          .map((row) => (
+                            <QueueTableRow
+                              key={row.id}
+                              row={row}
+                              selected={selected}
+                              onSelect={handleRowSelect}
+                            />
+                          ))}
 
-                    {filteredQueue.length === 0 && (
-                      <TableNoData searchQuery={filterQuery} />
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Scrollbar>
+                        {filteredQueue.length === 0 && (
+                          <TableNoData searchQuery={filterQuery} />
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Scrollbar>
 
-            <TablePagination
-              component="div"
-              page={page}
-              count={filteredQueue.length}
-              rowsPerPage={rowsPerPage}
-              onPageChange={handleChangePage}
-              rowsPerPageOptions={[5, 10, 20]}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-            />
-          </Card>
+                <TablePagination
+                  component="div"
+                  page={page}
+                  count={filteredQueue.length}
+                  rowsPerPage={rowsPerPage}
+                  onPageChange={handleChangePage}
+                  rowsPerPageOptions={[5, 10, 20]}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                />
+              </Card>
+            </motion.div>
+          </AnimatePresence>
         </Container>
       )}
 

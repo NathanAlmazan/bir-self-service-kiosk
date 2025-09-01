@@ -53,7 +53,7 @@ export default function ServiceCard({
       >
         <Typography variant="h4">{title}</Typography>
 
-        <Box sx={{ width: 84, height: 84 }}>
+        <Box sx={{ width: 64, height: 64 }}>
           <img alt={title} src={image} />
         </Box>
       </Box>
